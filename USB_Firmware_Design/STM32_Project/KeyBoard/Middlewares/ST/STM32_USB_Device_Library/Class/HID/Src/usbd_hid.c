@@ -331,7 +331,7 @@ __ALIGN_BEGIN static uint8_t HID_Keyboard_ReportDesc[HID_Keyboard_REPORT_DESC_SI
  * buffer[0] - bit0: Left CTRL
  * 			bit1: Left SHIFT
  * 			bit2: Left ALT
- * 			bit3: Left GUl
+ * 			bit3: Left GUI
  * 			bit4: Right CTRL
  * 			bit5: Right SHIFT
  * 			bit6: Right ALT
@@ -382,7 +382,7 @@ __ALIGN_BEGIN static uint8_t HID_Keyboard_ReportDesc[HID_Keyboard_REPORT_DESC_SI
  * buffer[0] - bit0: Left CTRL
  * 			   bit1: Left SHIFT
  * 			   bit2: Left ALT
- * 			   bit3: Left GUl
+ * 			   bit3: Left GUI
  * 			   bit4: Right CTRL
  * 			   bit5: Right SHIFT
  * 			   bit6: Right ALT

@@ -377,31 +377,6 @@ __ALIGN_BEGIN static uint8_t HID_Keyboard_ReportDesc[HID_Keyboard_REPORT_DESC_SI
 //  0x81, 0x00, //Input (Data, Array), ;Key arrays (6 bytes)
 //  0xc0, 	  //End Collection
 
-/*全键无冲描述符:73字节
- * 发送字节数:15B
- * buffer[0] - bit0: Left CTRL
- * 			   bit1: Left SHIFT
- * 			   bit2: Left ALT
- * 			   bit3: Left GUI
- * 			   bit4: Right CTRL
- * 			   bit5: Right SHIFT
- * 			   bit6: Right ALT
- * 			   bit7: Right GUl
- * buffer[1] - Padding = Always 0x00
- * buffer[2] - (A & a) ~ (H & h)
- * buffer[3] - (I & i) ~ (P & p)
- * buffer[4] - (Q & q) ~ (X & x)
- * buffer[5] - (Y & y) ~ (Z & z) | 1 ~ 6
- * buffer[6] - 7 ~ 0 | Enter | Esc | Backspace | Tab
- * buffer[7] - Space | - | = | [ | ] | \ | \ | ;
- * buffer[8] - ' | ` | , | . | / | Cap | F1 ~ F2
- * buffer[9] - F3 ~ F10
- * buffer[A] - F11 ~ F12 | PRTSRC | ScrollLock | Pause | Insert | Home | PgUp
- * buffer[B] - Delete | End | PgDn | Right | Left | Down | Up | Lock
- * buffer[C] - / | * | - | + | Enter | 1 ~ 3
- * buffer[D] - 4 ~ 0 | .
- * buffer[E] - (Keypad 6) ~ (Keyboard Application)
- * */
   0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)//73U
   0x09, 0x06,                    // USAGE (Keyboard)
   0xa1, 0x01,                    // COLLECTION (Application)

@@ -29,7 +29,79 @@
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
+
 /* USER CODE BEGIN PTD */
+/*----------------------------------------------------------------------------
+ **Full key conflict free descriptor:
+ * Descriptor length:73Bytes
+ * Send Bytes Num:15Bytes
+ * buffer[0] - bit0: Left CTRL
+ * 			 bit1: Left SHIFT
+ * 			 bit2: Left ALT
+ * 			 bit3: Left GUI
+ * 			 bit4: Right CTRL
+ * 			 bit5: Right SHIFT
+ * 			 bit6: Right ALT
+ * 			 bit7: Right GUl
+ * buffer[1] - Padding = Always 0x00
+ * buffer[2] - (A & a) ~ (H & h)
+ * buffer[3] - (I & i) ~ (P & p)
+ * buffer[4] - (Q & q) ~ (X & x)
+ * buffer[5] - (Y & y) ~ (Z & z) | 1 ~ 6
+ * buffer[6] - 7 ~ 0 | Enter | Esc | Backspace | Tab
+ * ** This is the number key 1 ~ 0 in the main keyboard area
+ * buffer[7] - Space | - | = | [ | ] | \ | \ | ;
+ * buffer[8] - ' | ` | , | . | / | Cap | F1 ~ F2
+ * buffer[9] - F3 ~ F10
+ * buffer[A] - F11 ~ F12 | PRTSRC | ScrollLock | Pause | Insert | Home | PgUp
+ * buffer[B] - Delete | End | PgDn | Right | Left | Down | Up | Lock
+ * buffer[C] - / | * | - | + | Enter | 1 ~ 3
+ * buffer[D] - 4 ~ 0 | .
+ * ** This is the number key 1 ~ 0 in the numeric keypad area
+ * buffer[E] - (Keypad 6) ~ (Keyboard Application)
+ *-----------------------------------------------------------------------------
+ **Following are the descriptor set in Func:HID_Keyboard_ReportDesc in usbd_hid.c
+//__ALIGN_BEGIN static uint8_t HID_Keyboard_ReportDesc[HID_Keyboard_REPORT_DESC_SIZE]  __ALIGN_END =
+//{
+//  0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)//73U
+//  0x09, 0x06,                    // USAGE (Keyboard)
+//  0xa1, 0x01,                    // COLLECTION (Application)
+//  0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
+//  0x19, 0xe0,                    //   USAGE_MINIMUM (Keyboard LeftControl)
+//  0x29, 0xe7,                    //   USAGE_MAXIMUM (Keyboard Right GUI)
+//  0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+//  0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
+//  0x95, 0x08,                    //   REPORT_COUNT (8)
+//  0x75, 0x01,                    //   REPORT_SIZE (1)
+//  0x81, 0x02,                    //   INPUT (Data,Var,Abs)
+//  0x95, 0x01,                    //   REPORT_COUNT (1)
+//  0x75, 0x08,                    //   REPORT_SIZE (8)
+//  0x81, 0x03,                    //   INPUT (Cnst,Var,Abs)
+//  0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
+//  0x19, 0x04,                    //   USAGE_MINIMUM (Keyboard a and A)
+//  0x29, 0x65,                    //   USAGE_MAXIMUM (Keyboard Application)
+//  0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+//  0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
+//  0x95, 0x62,                    //   REPORT_COUNT (98)
+//  0x75, 0x01,                    //   REPORT_SIZE (1)
+//  0x81, 0x02,                    //   INPUT (Data,Var,Abs)
+//  0x95, 0x01,                    //   REPORT_COUNT (1)
+//  0x75, 0x06,                    //   REPORT_SIZE (6)
+//  0x81, 0x03,                    //   INPUT (Cnst,Var,Abs)
+//  0x05, 0x08,                    //   USAGE_PAGE (LEDs)
+//  0x19, 0x01,                    //   USAGE_MINIMUM (Num Lock)
+//  0x29, 0x05,                    //   USAGE_MAXIMUM (Kana)
+//  0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+//  0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
+//  0x95, 0x05,                    //   REPORT_COUNT (5)
+//  0x75, 0x01,                    //   REPORT_SIZE (1)
+//  0x91, 0x02,                    //   OUTPUT (Data,Var,Abs)
+//  0x95, 0x01,                    //   REPORT_COUNT (1)
+//  0x75, 0x03,                    //   REPORT_SIZE (3)
+//  0x91, 0x03,                    //   OUTPUT (Cnst,Var,Abs)
+//  0xc0                           // END_COLLECTION
+//};
+ * */
 
 /* USER CODE END PTD */
 
@@ -112,70 +184,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  /* Full key conflict free descriptor:73Bytes
-   * Send Bytes Num:15Bytes
-   * buffer[0] - bit0: Left CTRL
-   * 			 bit1: Left SHIFT
-   * 			 bit2: Left ALT
-   * 			 bit3: Left GUI
-   * 			 bit4: Right CTRL
-   * 			 bit5: Right SHIFT
-   * 			 bit6: Right ALT
-   * 			 bit7: Right GUl
-   * buffer[1] - Padding = Always 0x00
-   * buffer[2] - (A & a) ~ (H & h)
-   * buffer[3] - (I & i) ~ (P & p)
-   * buffer[4] - (Q & q) ~ (X & x)
-   * buffer[5] - (Y & y) ~ (Z & z) | 1 ~ 6
-   * buffer[6] - 7 ~ 0 | Enter | Esc | Backspace | Tab
-   **** This is the number key 1 ~ 0 in the main keyboard area
-   * buffer[7] - Space | - | = | [ | ] | \ | \ | ;
-   * buffer[8] - ' | ` | , | . | / | Cap | F1 ~ F2
-   * buffer[9] - F3 ~ F10
-   * buffer[A] - F11 ~ F12 | PRTSRC | ScrollLock | Pause | Insert | Home | PgUp
-   * buffer[B] - Delete | End | PgDn | Right | Left | Down | Up | Lock
-   * buffer[C] - / | * | - | + | Enter | 1 ~ 3
-   * buffer[D] - 4 ~ 0 | .
-   **** This is the number key 1 ~ 0 in the numeric keypad area
-   * buffer[E] - (Keypad 6) ~ (Keyboard Application)
-   * */
-//  0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)//73U
-//  0x09, 0x06,                    // USAGE (Keyboard)
-//  0xa1, 0x01,                    // COLLECTION (Application)
-//  0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
-//  0x19, 0xe0,                    //   USAGE_MINIMUM (Keyboard LeftControl)
-//  0x29, 0xe7,                    //   USAGE_MAXIMUM (Keyboard Right GUI)
-//  0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
-//  0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
-//  0x95, 0x08,                    //   REPORT_COUNT (8)
-//  0x75, 0x01,                    //   REPORT_SIZE (1)
-//  0x81, 0x02,                    //   INPUT (Data,Var,Abs)
-//  0x95, 0x01,                    //   REPORT_COUNT (1)
-//  0x75, 0x08,                    //   REPORT_SIZE (8)
-//  0x81, 0x03,                    //   INPUT (Cnst,Var,Abs)
-//  0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
-//  0x19, 0x04,                    //   USAGE_MINIMUM (Keyboard a and A)
-//  0x29, 0x65,                    //   USAGE_MAXIMUM (Keyboard Application)
-//  0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
-//  0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
-//  0x95, 0x62,                    //   REPORT_COUNT (98)
-//  0x75, 0x01,                    //   REPORT_SIZE (1)
-//  0x81, 0x02,                    //   INPUT (Data,Var,Abs)
-//  0x95, 0x01,                    //   REPORT_COUNT (1)
-//  0x75, 0x06,                    //   REPORT_SIZE (6)
-//  0x81, 0x03,                    //   INPUT (Cnst,Var,Abs)
-//  0x05, 0x08,                    //   USAGE_PAGE (LEDs)
-//  0x19, 0x01,                    //   USAGE_MINIMUM (Num Lock)
-//  0x29, 0x05,                    //   USAGE_MAXIMUM (Kana)
-//  0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
-//  0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
-//  0x95, 0x05,                    //   REPORT_COUNT (5)
-//  0x75, 0x01,                    //   REPORT_SIZE (1)
-//  0x91, 0x02,                    //   OUTPUT (Data,Var,Abs)
-//  0x95, 0x01,                    //   REPORT_COUNT (1)
-//  0x75, 0x03,                    //   REPORT_SIZE (3)
-//  0x91, 0x03,                    //   OUTPUT (Cnst,Var,Abs)
-//  0xc0                           // END_COLLECTION
+
   /* USER CODE END Init */
 
   /* Configure the system clock */

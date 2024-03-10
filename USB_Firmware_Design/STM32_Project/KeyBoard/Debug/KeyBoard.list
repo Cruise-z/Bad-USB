@@ -37,17 +37,17 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_rnglists 00000d82  00000000  00000000  00037898  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_macro  0001adf8  00000000  00000000  0003861a  2**0
+ 17 .debug_macro  0001adf1  00000000  00000000  0003861a  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   0001673a  00000000  00000000  00053412  2**0
+ 18 .debug_line   0001673a  00000000  00000000  0005340b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    0008ddc0  00000000  00000000  00069b4c  2**0
+ 19 .debug_str    0008ddb2  00000000  00000000  00069b45  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_frame  00001cc8  00000000  00000000  000f790c  2**2
+ 20 .debug_frame  00001cc8  00000000  00000000  000f78f8  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_loclists 00006671  00000000  00000000  000f95d4  2**0
+ 21 .debug_loclists 00006671  00000000  00000000  000f95c0  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 22 .debug_line_str 0000004a  00000000  00000000  000ffc45  2**0
+ 22 .debug_line_str 0000004a  00000000  00000000  000ffc31  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -507,11 +507,11 @@ void Error_Handler(void)
 08000364 <Get_Descriptor>:
 void Get_Descriptor(uint8_t ascii){
  8000364:	b570      	push	{r4, r5, r6, lr}
-	memset(buffer, 0x00, sizeof(uint8_t)*PackageLEN);
+	memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
  8000366:	4c0b      	ldr	r4, [pc, #44]	; (8000394 <Get_Descriptor+0x30>)
 void Get_Descriptor(uint8_t ascii){
  8000368:	0005      	movs	r5, r0
-	memset(buffer, 0x00, sizeof(uint8_t)*PackageLEN);
+	memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
  800036a:	220f      	movs	r2, #15
  800036c:	2100      	movs	r1, #0
  800036e:	0020      	movs	r0, r4
@@ -546,7 +546,7 @@ void SimulateKeyPress(uint8_t ascii){
  800039c:	b510      	push	{r4, lr}
     Get_Descriptor(ascii);
  800039e:	f7ff ffe1 	bl	8000364 <Get_Descriptor>
-    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, PackageLEN);
+    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
  80003a2:	220f      	movs	r2, #15
  80003a4:	4902      	ldr	r1, [pc, #8]	; (80003b0 <SimulateKeyPress+0x14>)
  80003a6:	4803      	ldr	r0, [pc, #12]	; (80003b4 <SimulateKeyPress+0x18>)
@@ -560,14 +560,14 @@ void SimulateKeyPress(uint8_t ascii){
 080003b8 <SimulateKeyRelease>:
 void SimulateKeyRelease(){
  80003b8:	b570      	push	{r4, r5, r6, lr}
-	memset(buffer, 0x00, sizeof(uint8_t)*PackageLEN);
+	memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
  80003ba:	250f      	movs	r5, #15
  80003bc:	4c05      	ldr	r4, [pc, #20]	; (80003d4 <SimulateKeyRelease+0x1c>)
  80003be:	002a      	movs	r2, r5
  80003c0:	2100      	movs	r1, #0
  80003c2:	0020      	movs	r0, r4
  80003c4:	f003 fa59 	bl	800387a <memset>
-	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, PackageLEN);
+	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
  80003c8:	002a      	movs	r2, r5
  80003ca:	0021      	movs	r1, r4
  80003cc:	4802      	ldr	r0, [pc, #8]	; (80003d8 <SimulateKeyRelease+0x20>)
@@ -659,7 +659,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
  8000452:	f000 f83f 	bl	80004d4 <MX_USART2_UART_Init>
   MX_USB_DEVICE_Init();
  8000456:	f003 f841 	bl	80034dc <MX_USB_DEVICE_Init>
-  memset(buffer, 0x00, sizeof(uint8_t)*PackageLEN);
+  memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
  800045a:	220f      	movs	r2, #15
  800045c:	2100      	movs	r1, #0
  800045e:	4803      	ldr	r0, [pc, #12]	; (800046c <main+0x28>)

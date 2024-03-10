@@ -175,9 +175,8 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define PackageLEN 15
 #define StrokeSlot 50
-uint8_t buffer[PackageLEN];
+uint8_t buffer[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
 
 uint8_t map[128]={
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -238,7 +237,7 @@ int main(void)
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
 
-  memset(buffer, 0x00, sizeof(uint8_t)*PackageLEN);
+  memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 
   /* USER CODE END 2 */
 
@@ -297,7 +296,7 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void Get_Descriptor(uint8_t ascii){
-	memset(buffer, 0x00, sizeof(uint8_t)*PackageLEN);
+	memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 	uint8_t pos = map[ascii];
 	buffer[(uint8_t)(pos>>4)] |= (1<<((uint8_t)(pos&0x07)));
 	if((pos&0x08) == 8)
@@ -308,14 +307,14 @@ void SimulateKeyPress(uint8_t ascii){
     //get key:ascii Descriptor
     Get_Descriptor(ascii);
     //Sent Descriptor report
-    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, PackageLEN);
+    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 }
 
 void SimulateKeyRelease(){
     //set 0
-	memset(buffer, 0x00, sizeof(uint8_t)*PackageLEN);
+	memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
     //Sent Descriptor report
-	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, PackageLEN);
+	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 }
 
 void SimulateKeyStroke(uint8_t ascii){

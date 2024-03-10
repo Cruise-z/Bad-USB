@@ -35,7 +35,10 @@
 #include "stm32f0xx_hal.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+/*---------- -----------*/
+#define USBD_CUSTOMHID_OUTREPORT_BUF_SIZE    15U
+/*---------- -----------*/
+#define USBD_CUSTOM_HID_REPORT_DESC_SIZE     73U
 /* USER CODE END INCLUDE */
 
 /** @addtogroup USBD_OTG_DRIVER
@@ -72,7 +75,7 @@
 /*---------- -----------*/
 #define USBD_SELF_POWERED     1
 /*---------- -----------*/
-#define HID_FS_BINTERVAL     0xA
+#define CUSTOM_HID_FS_BINTERVAL     0x5
 
 /****************************************/
 /* #define for FS and HS identification */

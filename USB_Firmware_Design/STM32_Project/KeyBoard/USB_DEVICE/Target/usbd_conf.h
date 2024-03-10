@@ -36,9 +36,11 @@
 
 /* USER CODE BEGIN INCLUDE */
 /*---------- -----------*/
+#define USBD_CUSTOM_HID_REPORT_DESC_SIZE     73U
+/*---------- -----------*/
 #define USBD_CUSTOMHID_OUTREPORT_BUF_SIZE    15U
 /*---------- -----------*/
-#define USBD_CUSTOM_HID_REPORT_DESC_SIZE     73U
+#define USBD_CUSTOMHID_INREPORT_BUF_SIZE     01U
 /* USER CODE END INCLUDE */
 
 /** @addtogroup USBD_OTG_DRIVER

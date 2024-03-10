@@ -33,48 +33,61 @@
 /**Full key conflict free descriptor:
  *-----------------------------------------------------------------------------
  * Descriptor length:73Bytes
- * Send Bytes Num:15Bytes
- * buffer[0] - bit0: Left CTRL
- * 			 bit1: Left SHIFT
- * 			 bit2: Left ALT
- * 			 bit3: Left GUI
- * 			 bit4: Right CTRL
- * 			 bit5: Right SHIFT
- * 			 bit6: Right ALT
- * 			 bit7: Right GUl
- * buffer[1] - Padding = Always 0x00
- * buffer[2] - (A & a) ~ (H & h)
- * buffer[3] - (I & i) ~ (P & p)
- * buffer[4] - (Q & q) ~ (X & x)
- * buffer[5] - (Y & y) ~ (Z & z) | 1 ~ 6
- * buffer[6] - 7 ~ 0 | Enter | Esc | Backspace | Tab
- * ** This is the number key 1 ~ 0 in the main keyboard area
- * buffer[7] - Space | - | = | [ | ] | \ | \ | ;
- * buffer[8] - ' | ` | , | . | / | Cap | F1 ~ F2
- * buffer[9] - F3 ~ F10
- * buffer[A] - F11 ~ F12 | PRTSRC | ScrollLock | Pause | Insert | Home | PgUp
- * buffer[B] - Delete | End | PgDn | Right | Left | Down | Up | Lock
- * buffer[C] - / | * | - | + | Enter | 1 ~ 3
- * buffer[D] - 4 ~ 0 | .
- * ** This is the number key 1 ~ 0 in the numeric keypad area
- * buffer[E] - (Keypad 6) ~ (Keyboard Application)
+ * ____________________________________________________________________________
+ *| Send Bytes Num:15Bytes                                                     |
+ *| buffer[0] - bit0: Left CTRL                                                |
+ *|			    bit1: Left SHIFT                                               |
+ *|			    bit2: Left ALT                                                 |
+ *|			    bit3: Left GUI                                                 |
+ *|			    bit4: Right CTRL                                               |
+ *|			    bit5: Right SHIFT                                              |
+ *|			    bit6: Right ALT                                                |
+ *|			    bit7: Right GUI                                                |
+ *| buffer[1] - Padding = Always 0x00                                          |
+ *| buffer[2] - (A & a) ~ (H & h)                                              |
+ *| buffer[3] - (I & i) ~ (P & p)                                              |
+ *| buffer[4] - (Q & q) ~ (X & x)                                              |
+ *| buffer[5] - (Y & y) ~ (Z & z) | 1 ~ 6                                      |
+ *| buffer[6] - 7 ~ 0 | Enter | Esc | Backspace | Tab                          |
+ *|** This is the number key 1 ~ 0 in the main keyboard area                   |
+ *| buffer[7] - Space | - | = | [ | ] | \ | \ | ;                              |
+ *| buffer[8] - ' | ` | , | . | / | Cap | F1 ~ F2                              |
+ *| buffer[9] - F3 ~ F10                                                       |
+ *| buffer[A] - F11 ~ F12 | PRTSRC | ScrollLock | Pause | Insert | Home | PgUp |
+ *| buffer[B] - Delete | End | PgDn | Right | Left | Down | Up | Lock          |
+ *| buffer[C] - / | * | - | + | Enter | 1 ~ 3                                  |
+ *| buffer[D] - 4 ~ 0 | .                                                      |
+ *|** This is the number key 1 ~ 0 in the numeric keypad area                  |
+ *| buffer[E] - (Keypad 6) ~ (Keyboard Application)                            |
+ *|____________________________________________________________________________|
+ *| Recv Bytes Num:1Bytes                                                      |
+ *| buffer[0] - bit0: Num Lock       //States of Num Lock LED                  |
+ *|			    bit1: Caps Lock      //States of Caps Lock LED                 |
+ *|			    bit2: Scroll Lock    //States of Scroll Lock LED               |
+ *|			    bit3: Compose        //States of Compose LED                   |
+ *|			    bit4: Kana           //States of Kana LED                      |
+ *|			    bit5-7: Additional LED                                         |                                              |
+ *|____________________________________________________________________________|
  *-----------------------------------------------------------------------------
  **Following is the mapping from:
  *| [ASCII code characters] to [corresponding keyboard descriptors]
- * _____________________________________________________________________
- *|        From ASCII to Keyboard descriptors Mapping Table             |
- *| 1. The upper four bits are the (buffer index:Ah[from 0 to 15]),     |
- *| 2. the highest bit of the lower four bits is                        |
- *|    whether to use the control key shift(Bh+8h/Bh+0h),               |
- *| 3. and the remaining three bits are the                             |
- *|    (byte numbers:Bh[from 0h to 7h])                                 |
- *|    corresponding to                                                 |
- *|    the descriptor of the ASCII character in the buffer array index  |
- *| 4. map[ASCII] = 0x(A)(B/B+8)                                        |
- *|_____________________________________________________________________|
- //uint8_t map[128]={
+ * ____________________________________________________________________________
+ *|        From ASCII to Keyboard descriptors Mapping Table                    |
+ *| 1. The upper four bits are the (buffer index:Ah[from 0 to 15]),            |
+ *| 2. the highest bit of the lower four bits is                               |
+ *|    whether to use the control key shift(Bh+8h/Bh+0h),                      |
+ *| 3. and the remaining three bits are the                                    |
+ *|    (byte numbers:Bh[from 0h to 7h])                                        |
+ *|    corresponding to                                                        |
+ *|    the descriptor of the ASCII character in the buffer array index         |
+ *| 4. map[ASCII] = 0x(A)(B/B+8)                                               |
+ *| 5. map[0]-[127] is standard mapping from ASCII to its descriptor           |
+ *|    map[128]-[]  is Customize keyboard shortcuts to its descriptor:         |
+ *|        (1).map[128]:Capslock's descriptor                                  |
+ *|____________________________________________________________________________|
+ //uint8_t map[129]={
  //		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- //		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ //		0x00, 0x00, 0x64, 0x00, 0x00, 0x64, 0x00, 0x00,
  //		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
  //		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
  //		0x70, 0x5a, 0x88, 0x5c, 0x5d, 0x5e, 0x68, 0x80,
@@ -88,10 +101,11 @@
  //		0x81, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
  //		0x27, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,
  //		0x37, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,
- //		0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0
+ //		0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0,
+ //     0x85,     //ASCII[128]:Capslock
  //};
  *-----------------------------------------------------------------------------
- **Following are the descriptor set in Func:
+ **Following are the descriptor set in Function:
  *                CUSTOM_HID_ReportDesc_FS in usbd_custom_hid_if.c
  //  0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)//73U
  //  0x09, 0x06,                    // USAGE (Keyboard)
@@ -133,12 +147,16 @@
  *----------------------------------------------------------------------------
  **Following are init steps about this Project:
  * 1. usbd_conf.h: //can modify to USER CODE position
- *    #define USBD_CUSTOMHID_OUTREPORT_BUF_SIZE    15U
  *    #define USBD_CUSTOM_HID_REPORT_DESC_SIZE     73U
+ *    #define USBD_CUSTOMHID_OUTREPORT_BUF_SIZE    15U
+ *    #define USBD_CUSTOMHID_INREPORT_BUF_SIZE     01U
  * 2. usbd_customhid.h:
  *    #ifndef USBD_CUSTOMHID_OUTREPORT_BUF_SIZE
  *    #define USBD_CUSTOMHID_OUTREPORT_BUF_SIZE  0x0fU //15Bytes
  *    #endif  //USBD_CUSTOMHID_OUTREPORT_BUF_SIZE
+ *    #ifndef USBD_CUSTOMHID_INREPORT_BUF_SIZE
+ *    #define USBD_CUSTOMHID_INREPORT_BUF_SIZE   01U   //1Bytes
+ *    #endif  //USBD_CUSTOMHID_INREPORT_BUF_SIZE
  *    #ifndef USBD_CUSTOM_HID_REPORT_DESC_SIZE
  *    #define USBD_CUSTOM_HID_REPORT_DESC_SIZE   73U   //73Bytes
  *    #endif  //USBD_CUSTOM_HID_REPORT_DESC_SIZE
@@ -176,11 +194,13 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 #define StrokeSlot 50
-uint8_t buffer[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
+uint8_t sent_buffer[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
 
-uint8_t map[128]={
+uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
+
+uint8_t map[129]={
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x64, 0x00, 0x00, 0x64, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x70, 0x5a, 0x88, 0x5c, 0x5d, 0x5e, 0x68, 0x80,
@@ -194,7 +214,8 @@ uint8_t map[128]={
 		0x81, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
 		0x27, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,
 		0x37, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,
-		0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0
+		0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0,
+		0x85,
 };
 
 
@@ -203,6 +224,7 @@ void SimulateKeyPress(uint8_t ascii);
 void SimulateKeyRelease();
 void SimulateKeyStroke(uint8_t ascii);
 void SimulateKeyStrokes(char *str, int len);
+void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]);
 /* USER CODE END 0 */
 
 /**
@@ -237,7 +259,7 @@ int main(void)
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
 
-  memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+  memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 
   /* USER CODE END 2 */
 
@@ -296,25 +318,25 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void Get_Descriptor(uint8_t ascii){
-	memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 	uint8_t pos = map[ascii];
-	buffer[(uint8_t)(pos>>4)] |= (1<<((uint8_t)(pos&0x07)));
+	sent_buffer[(uint8_t)(pos>>4)] |= (1<<((uint8_t)(pos&0x07)));
 	if((pos&0x08) == 8)
-		buffer[0] |= 0x02;
+		sent_buffer[0] |= 0x02;
 }
 
 void SimulateKeyPress(uint8_t ascii){
     //get key:ascii Descriptor
     Get_Descriptor(ascii);
     //Sent Descriptor report
-    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 }
 
 void SimulateKeyRelease(){
     //set 0
-	memset(buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
     //Sent Descriptor report
-	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 }
 
 void SimulateKeyStroke(uint8_t ascii){
@@ -330,20 +352,43 @@ void SimulateKeyStrokes(char *str, int len){
     }
 }
 
+void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]){
+	for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++){
+		for(int j = 0; j < 8; j++){
+			SimulateKeyStroke(((Recv_Buf[i]&(uint8_t)(0x01<<j))>>j)+'0');
+		}
+	}
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	GPIO_PinState key_pin = HAL_GPIO_ReadPin(GPIOA, GPIO_Pin);  // 读取key的状�??
+	GPIO_PinState key_pin = HAL_GPIO_ReadPin(GPIOA, GPIO_Pin);
 	if(key_pin == GPIO_PIN_SET){
-//		buffer[0] = 0x02;
-//		buffer[5] = 0x04;
-//		USBD_HID_SendReport(&hUsbDeviceFS, buffer, PackageLEN);
-//		HAL_Delay(100);
-//		buffer[0] = 0x00;
-//		buffer[5] = 0x00;
-//		USBD_HID_SendReport(&hUsbDeviceFS, buffer, PackageLEN);
+
 		HAL_Delay(500);
+
+
 		char str[256];
-		strcpy(str, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE");
+		str[0] = 128;
+		str[1] = 0;
+
 		SimulateKeyStrokes(str, strlen(str));
+		HAL_Delay(2000);
+		if((recv_buffer[0]&0x02) == 0x02){
+			PrintRecvBuf(recv_buffer);
+			SimulateKeyStrokes("\n", 1);
+
+			SimulateKeyStrokes(str, strlen(str));
+
+			PrintRecvBuf(recv_buffer);
+			SimulateKeyStrokes("\n", 1);
+			strcpy(str, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
+		    SimulateKeyStrokes(str, strlen(str));
+
+		}
+		else{
+			strcpy(str, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
+			SimulateKeyStrokes(str, strlen(str));
+		}
 //		HAL_GPIO_WritePin(GPIOA, GPIO_Pin, GPIO_PIN_RESET);
 	}
 }

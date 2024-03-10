@@ -31,7 +31,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -211,7 +211,22 @@ static int8_t CUSTOM_HID_DeInit_FS(void)
 static int8_t CUSTOM_HID_OutEvent_FS(uint8_t event_idx, uint8_t state)
 {
   /* USER CODE BEGIN 6 */
-  return (USBD_OK);
+
+	//View received data length
+//	USB_Received_Count = USBD_GetRxCount(&hUsbDeviceFS, CUSTOM_HID_EPOUT_ADDR);
+//	printf("USB_Received_Count = %d \r\n",USB_Received_Count);
+//
+//	USB_Received_Count = USBD_GetRxCount(&hUsbDeviceFS, CUSTOM_HID_EPIN_ADDR);
+//	printf("USB_Received_Count_in = %d \r\n",USB_Received_Count);
+
+	//A pointer to the USBD-CUSTOM-HID_HandleTypeDef structure
+	USBD_CUSTOM_HID_HandleTypeDef *hhid;
+	//Obtain the storage address for USB receiving data
+	hhid = (USBD_CUSTOM_HID_HandleTypeDef*)hUsbDeviceFS.pClassData;
+
+	for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++)
+		recv_buffer[i] = hhid->Report_buf[i];
+	return (USBD_OK);
   /* USER CODE END 6 */
 }
 

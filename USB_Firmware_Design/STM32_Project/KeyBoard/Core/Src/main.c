@@ -36,13 +36,13 @@
  * ____________________________________________________________________________
  *| Send Bytes Num:15Bytes                                                     |
  *| buffer[0] - bit0: Left CTRL                                                |
- *|			    bit1: Left SHIFT                                               |
- *|			    bit2: Left ALT                                                 |
- *|			    bit3: Left GUI                                                 |
- *|			    bit4: Right CTRL                                               |
- *|			    bit5: Right SHIFT                                              |
- *|			    bit6: Right ALT                                                |
- *|			    bit7: Right GUI                                                |
+ *|           - bit1: Left SHIFT                                               |
+ *|           - bit2: Left ALT                                                 |
+ *|           - bit3: Left GUI                                                 |
+ *|           - bit4: Right CTRL                                               |
+ *|           - bit5: Right SHIFT                                              |
+ *|           - bit6: Right ALT                                                |
+ *|           - bit7: Right GUI                                                |
  *| buffer[1] - Padding = Always 0x00                                          |
  *| buffer[2] - (A & a) ~ (H & h)                                              |
  *| buffer[3] - (I & i) ~ (P & p)                                              |
@@ -62,26 +62,27 @@
  *|____________________________________________________________________________|
  *| Recv Bytes Num:1Bytes                                                      |
  *| buffer[0] - bit0: Num Lock       //States of Num Lock LED                  |
- *|			    bit1: Caps Lock      //States of Caps Lock LED                 |
- *|			    bit2: Scroll Lock    //States of Scroll Lock LED               |
- *|			    bit3: Compose        //States of Compose LED                   |
- *|			    bit4: Kana           //States of Kana LED                      |
- *|			    bit5-7: Additional LED                                         |                                              |
+ *|           - bit1: Caps Lock      //States of Caps Lock LED                 |
+ *|           - bit2: Scroll Lock    //States of Scroll Lock LED               |
+ *|           - bit3: Compose        //States of Compose LED                   |
+ *|           - bit4: Kana           //States of Kana LED                      |
+ *|           - bit5-7: Additional LED                                         |                                              |
  *|____________________________________________________________________________|
  *-----------------------------------------------------------------------------
  **Following is the mapping from:
  *| [ASCII code characters] to [corresponding keyboard descriptors]
  * ____________________________________________________________________________
  *|        From ASCII to Keyboard descriptors Mapping Table                    |
- *| 1. The upper four bits are the (buffer index:Ah[from 0 to 15]),            |
- *| 2. the highest bit of the lower four bits is                               |
+ *| 1. This is a mapping in [half-width] + [lowercase] mode                    |
+ *| 2. The upper four bits are the (buffer index:Ah[from 0 to 15]),            |
+ *| 3. the highest bit of the lower four bits is                               |
  *|    whether to use the control key shift(Bh+8h/Bh+0h),                      |
- *| 3. and the remaining three bits are the                                    |
+ *| 4. and the remaining three bits are the                                    |
  *|    (byte numbers:Bh[from 0h to 7h])                                        |
  *|    corresponding to                                                        |
  *|    the descriptor of the ASCII character in the buffer array index         |
- *| 4. map[ASCII] = 0x(A)(B/B+8)                                               |
- *| 5. map[0]-[127] is standard mapping from ASCII to its descriptor           |
+ *| 5. map[ASCII] = 0x(A)(B/B+8)                                               |
+ *| 6. map[0]-[127] is standard mapping from ASCII to its descriptor           |
  *|    map[128]-[]  is Customize keyboard shortcuts to its descriptor:         |
  *|        (1).map[128]:Capslock's descriptor                                  |
  *|____________________________________________________________________________|
@@ -193,12 +194,13 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#define MapLen 129
 #define StrokeSlot 50
 uint8_t sent_buffer[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
 
 uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
 
-uint8_t map[129]={
+uint8_t Map[MapLen]={
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x64, 0x00, 0x00, 0x64, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -225,6 +227,9 @@ void SimulateKeyRelease();
 void SimulateKeyStroke(uint8_t ascii);
 void SimulateKeyStrokes(char *str, int len);
 void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]);
+void InitKeyboardStatus();
+void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]);
+
 /* USER CODE END 0 */
 
 /**
@@ -260,6 +265,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+  Convert2CapsMap(Map);
 
   /* USER CODE END 2 */
 
@@ -267,10 +273,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while(1){
 	  HAL_GPIO_EXTI_Callback(Key_Pin);
-  }
-    /* USER CODE END WHILE */
+//	  HAL_Delay(500);
+//	  char str[256];
+//	  strcpy(str, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
+//	  SimulateKeyStrokes(str, strlen(str));
 
-    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END WHILE */
+
+  /* USER CODE BEGIN 3 */
   /* USER CODE END 3 */
 }
 
@@ -319,7 +330,7 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void Get_Descriptor(uint8_t ascii){
 	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
-	uint8_t pos = map[ascii];
+	uint8_t pos = Map[ascii];
 	sent_buffer[(uint8_t)(pos>>4)] |= (1<<((uint8_t)(pos&0x07)));
 	if((pos&0x08) == 8)
 		sent_buffer[0] |= 0x02;
@@ -353,10 +364,28 @@ void SimulateKeyStrokes(char *str, int len){
 }
 
 void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]){
+	HAL_Delay(StrokeSlot);
 	for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++){
 		for(int j = 0; j < 8; j++){
 			SimulateKeyStroke(((Recv_Buf[i]&(uint8_t)(0x01<<j))>>j)+'0');
 		}
+	}
+	SimulateKeyStroke('\n');
+}
+
+void InitKeyboardStatus(){//Convert keyboard to uppercase mode
+//	SimulateKeyStroke(128);
+//	HAL_Delay(StrokeSlot);
+	if((recv_buffer[0]&0x02) != 0x02){
+		SimulateKeyStroke(128);
+		PrintRecvBuf(recv_buffer);  //print Keyboard LED Status
+	}
+}
+
+void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]){
+	for(uint8_t cnt = 'A'; cnt <= 'Z'; cnt++){
+		LowerCaseMap[cnt] -= 0x08;
+		LowerCaseMap[cnt+'a'-'A'] += 0x08;
 	}
 }
 
@@ -366,29 +395,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 		HAL_Delay(500);
 
+		InitKeyboardStatus();
+
 
 		char str[256];
-		str[0] = 128;
-		str[1] = 0;
-
+		strcpy(str, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
 		SimulateKeyStrokes(str, strlen(str));
-		HAL_Delay(2000);
-		if((recv_buffer[0]&0x02) == 0x02){
-			PrintRecvBuf(recv_buffer);
-			SimulateKeyStrokes("\n", 1);
 
-			SimulateKeyStrokes(str, strlen(str));
-
-			PrintRecvBuf(recv_buffer);
-			SimulateKeyStrokes("\n", 1);
-			strcpy(str, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
-		    SimulateKeyStrokes(str, strlen(str));
-
-		}
-		else{
-			strcpy(str, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
-			SimulateKeyStrokes(str, strlen(str));
-		}
 //		HAL_GPIO_WritePin(GPIOA, GPIO_Pin, GPIO_PIN_RESET);
 	}
 }

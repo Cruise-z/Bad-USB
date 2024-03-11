@@ -146,7 +146,8 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
-
+extern void SimulateKeyStroke(uint8_t ascii);
+extern void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]);
 /* USER CODE END EXPORTED_VARIABLES */
 /**
   * @}
@@ -226,6 +227,11 @@ static int8_t CUSTOM_HID_OutEvent_FS(uint8_t event_idx, uint8_t state)
 
 	for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++)
 		recv_buffer[i] = hhid->Report_buf[i];
+//	SimulateKeyStroke(128);
+//	if(((hhid->Report_buf[0])&0x02) != 0x02){
+//		SimulateKeyStroke(128);
+//		PrintRecvBuf(recv_buffer);  //print Keyboard LED Status
+//	}
 	return (USBD_OK);
   /* USER CODE END 6 */
 }

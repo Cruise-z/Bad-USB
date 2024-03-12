@@ -127,8 +127,8 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
   0x95, 0x01,                    //   REPORT_COUNT (1)
   0x75, 0x03,                    //   REPORT_SIZE (3)
   0x91, 0x03,                    //   OUTPUT (Cnst,Var,Abs)
-  0xc0                           // END_COLLECTION
   /* USER CODE END 0 */
+  0xC0    /*     END_COLLECTION	             */
 };
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
@@ -146,8 +146,10 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
-extern void SimulateKeyStroke(uint8_t ascii);
-extern void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]);
+extern TIM_HandleTypeDef htim2;
+extern HAL_StatusTypeDef HAL_TIM_Base_Start_IT(TIM_HandleTypeDef *htim);
+extern void MX_TIM2_Init(void);
+
 /* USER CODE END EXPORTED_VARIABLES */
 /**
   * @}
@@ -224,14 +226,20 @@ static int8_t CUSTOM_HID_OutEvent_FS(uint8_t event_idx, uint8_t state)
 	USBD_CUSTOM_HID_HandleTypeDef *hhid;
 	//Obtain the storage address for USB receiving data
 	hhid = (USBD_CUSTOM_HID_HandleTypeDef*)hUsbDeviceFS.pClassData;
+	/*USBD_CUSTOMHID_INREPORT_BUF_SIZE is always 1,
+	 * Copy hhid->Report_buf[0] directly to recv_buffer[0]
+	 * by judging conditions,
+	 * aim to eliminating loop operations.
+	 */
+	//for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++)
+	//recv_buffer[i] = hhid->Report_buf[i];
+	if(((recv_buffer[0]=(hhid->Report_buf[0]))&0x02) != 0x02){
+		//Trigger timer interrupt immediately by setting the value of the register
+		TIM2->EGR |= TIM_EGR_UG;
 
-	for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++)
-		recv_buffer[i] = hhid->Report_buf[i];
-//	SimulateKeyStroke(128);
-//	if(((hhid->Report_buf[0])&0x02) != 0x02){
-//		SimulateKeyStroke(128);
-//		PrintRecvBuf(recv_buffer);  //print Keyboard LED Status
-//	}
+		MX_TIM2_Init();
+		HAL_TIM_Base_Start_IT(&htim2);
+	}
 	return (USBD_OK);
   /* USER CODE END 6 */
 }

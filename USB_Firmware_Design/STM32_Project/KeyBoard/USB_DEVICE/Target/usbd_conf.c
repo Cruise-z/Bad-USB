@@ -35,7 +35,6 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
 /* USER CODE END PV */
 
 PCD_HandleTypeDef hpcd_USB_FS;

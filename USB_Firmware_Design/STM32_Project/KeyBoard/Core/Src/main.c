@@ -362,10 +362,10 @@ void Get_Descriptor(uint8_t ascii){
 void SimulateKeyPress(uint8_t ascii){
     //get key:ascii Descriptor
     Get_Descriptor(ascii);
-    //Sent Descriptor report
+    //Ensure that this instruction is executed in uppercase environment.
     while((recv_buffer[0]&0x02) != 0x02)
     	HAL_Delay(1);
-    //Ensure that this instruction is executed in uppercase environment.
+    //Sent Descriptor report
     USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
     if((recv_buffer[0]&0x02) != 0x02)
     	NeedRollBack = 1;
@@ -387,10 +387,12 @@ void SimulateKeyStroke(uint8_t ascii){
 
 void SimulateKeyStrokes(char *str, int len, int *cntNow){
     for(; *cntNow < len; (*cntNow)++){
+    	//Ensure func SimulateKeyStroke is executed in uppercase environment.
     	if((recv_buffer[0]&0x02) != 0x02){
     		SimulateKeyStroke(128);
     	}
     	SimulateKeyStroke(str[*cntNow]);
+    	//Determine if RollBack is necessary
     	if(NeedRollBack == 1){
     		NeedRollBack = 0;
     		(*cntNow)--;

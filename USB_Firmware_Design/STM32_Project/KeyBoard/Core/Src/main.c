@@ -168,18 +168,30 @@
  *    USB CUSTOM_HID device FS Configuration Descriptor:
  *        Descriptor of CUSTOM HID interface:
  *            0x01,  //nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse
- * 4. stm32f0xx_hal_pcd.c:
+ * 4. usbd_custom_hid_if.c:
+ *    Modify your code to USER CODE position:
+ *    (1).Referencing external variables:
+ *        extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
+ *        extern int InterruptFlag;
+ *        extern USBD_HandleTypeDef hUsbDeviceFS;
+ *    (2).Fill in custom keyboard device descriptors
+ *    (3).Customize Callback function:[CUSTOM_HID_OutEvent_FS]
+ *        Which deals with received data from host.
+ * 5. stm32f0xx_hal_pcd.c:
  *    (1).Add these external declarations at the beginning of this file:
  *        #define USBD_CUSTOMHID_INREPORT_BUF_SIZE 1
  *        extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
+ *        extern int InterruptFlag;
  *        extern int NeedRollBack;
  *    (2).In function: HAL_StatusTypeDef HAL_PCD_EP_Transmit();
- *        Add following codes after HAL_PCD_EP_Transmit function:
- *            //output test to choose whether to RollBack
+ *        Add following codes **before** USB_EPStartXfer function:
+ *            //Determine whether to generate an interrupt:
  *            if((recv_buffer[0]&0x02) != 0x02)
- *            NeedRollBack = 1;
- * 5. usbd_custom_hid_if.c:
- *    Modify your code to USER CODE position
+ *                InterruptFlag = 1;
+ *        Add following codes **after** USB_EPStartXfer function:
+ *            //Output test to choose whether to RollBack:
+ *            if((recv_buffer[0]&0x02) != 0x02)
+ *                NeedRollBack = 1;
  *----------------------------------------------------------------------------*/
 /* USER CODE END PTD */
 
@@ -234,6 +246,7 @@ uint8_t Map[MapLen]={
 		0x85, 0x66
 };
 
+int InterruptFlag = 0;
 int InterruptCnt = 0;
 int PrintCnt = 0;
 int NeedRollBack = 0;
@@ -247,6 +260,7 @@ void SimulateKeyStrokes(char *str, int len, int *cntNow);
 void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]);
 void InitKeyboardStatus();
 void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]);
+void InterruptTrap(int *InterruptFlag);
 
 /* USER CODE END 0 */
 
@@ -292,6 +306,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   int flag = 1;
   while(1){
+	  InterruptTrap(&InterruptFlag);
+
 	  if(flag == 1){
 		  HAL_Delay(500);
 
@@ -363,8 +379,8 @@ void SimulateKeyPress(uint8_t ascii){
     //get key:ascii Descriptor
     Get_Descriptor(ascii);
     //Ensure that this instruction is executed in uppercase environment.
-    while((recv_buffer[0]&0x02) != 0x02)
-    	HAL_Delay(1);
+//    while((recv_buffer[0]&0x02) != 0x02)
+//    	HAL_Delay(1);
     //Sent Descriptor report
     USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
     if((recv_buffer[0]&0x02) != 0x02)
@@ -424,6 +440,17 @@ void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]){
 	for(uint8_t cnt = 'A'; cnt <= 'Z'; cnt++){
 		LowerCaseMap[cnt] &= 0xf7;
 		LowerCaseMap[cnt+'a'-'A'] |= 0x08;
+	}
+}
+
+void InterruptTrap(int *InterruptFlag){
+	if(*InterruptFlag == 1){
+		*InterruptFlag = 0;
+		//Trigger timer interrupt immediately by setting the value of the register
+		TIM2->EGR |= TIM_EGR_UG;
+		//Second entry interrupt
+		MX_TIM2_Init();
+		HAL_TIM_Base_Start_IT(&htim2);
 	}
 }
 

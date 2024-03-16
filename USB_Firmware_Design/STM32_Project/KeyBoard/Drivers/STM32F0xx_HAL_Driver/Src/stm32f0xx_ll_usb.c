@@ -40,7 +40,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f0xx_hal.h"
-
 /** @addtogroup STM32F0xx_LL_USB_DRIVER
   * @{
   */

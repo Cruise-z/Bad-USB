@@ -55,9 +55,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f0xx_hal.h"
+
 #define USBD_CUSTOMHID_INREPORT_BUF_SIZE 1
 extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
+extern int InterruptFlag;
 extern int NeedRollBack;
+
 /** @addtogroup STM32F0xx_HAL_Driver
   * @{
   */
@@ -1510,6 +1513,9 @@ HAL_StatusTypeDef HAL_PCD_EP_Transmit(PCD_HandleTypeDef *hpcd, uint8_t ep_addr, 
   ep->is_in = 1U;
   ep->num = ep_addr & EP_ADDR_MSK;
 
+  if((recv_buffer[0]&0x02) != 0x02){
+	  InterruptFlag = 1;
+  }
   (void)USB_EPStartXfer(hpcd->Instance, ep);
   //output test to choose whether to RollBack
   if((recv_buffer[0]&0x02) != 0x02)

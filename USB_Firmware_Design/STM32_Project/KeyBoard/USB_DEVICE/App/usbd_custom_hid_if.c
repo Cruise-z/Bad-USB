@@ -32,6 +32,7 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
+extern int InterruptFlag;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -146,10 +147,6 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
-extern TIM_HandleTypeDef htim2;
-extern HAL_StatusTypeDef HAL_TIM_Base_Start_IT(TIM_HandleTypeDef *htim);
-extern void MX_TIM2_Init(void);
-
 /* USER CODE END EXPORTED_VARIABLES */
 /**
   * @}
@@ -228,17 +225,13 @@ static int8_t CUSTOM_HID_OutEvent_FS(uint8_t event_idx, uint8_t state)
 	hhid = (USBD_CUSTOM_HID_HandleTypeDef*)hUsbDeviceFS.pClassData;
 	/*USBD_CUSTOMHID_INREPORT_BUF_SIZE is always 1,
 	 * Copy hhid->Report_buf[0] directly to recv_buffer[0]
-	 * by judging conditions,
-	 * aim to eliminating loop operations.
+	 * By judging conditions,
+	 * Aiming to eliminating loop operations:
+	 * for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++)
+	 *     recv_buffer[i] = hhid->Report_buf[i];
 	 */
-	//for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++)
-	//recv_buffer[i] = hhid->Report_buf[i];
 	if(((recv_buffer[0]=(hhid->Report_buf[0]))&0x02) != 0x02){
-		//Trigger timer interrupt immediately by setting the value of the register
-		TIM2->EGR |= TIM_EGR_UG;
-
-		MX_TIM2_Init();
-		HAL_TIM_Base_Start_IT(&htim2);
+		InterruptFlag = 1;
 	}
 	return (USBD_OK);
   /* USER CODE END 6 */

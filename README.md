@@ -205,8 +205,6 @@ void SimulateKeyPress(uint8_t ascii){
     Get_Descriptor(ascii);
     //Sent Descriptor report
     USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
-    if((recv_buffer[0]&0x02) != 0x02)
-    	NeedRollBack = 1;
 }
 //按键松开子过程
 void SimulateKeyRelease(){
@@ -259,7 +257,9 @@ void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]){
 }
 ```
 
-#### 中断处理外部干扰
+#### 屏蔽外部干扰
+
+##### 设计中断陷阱
 
 由于STM32没有异常陷阱机制，只有一系列外部中断调用方法，在这里选取定时器中断处理外部干扰。
 
@@ -277,115 +277,35 @@ void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]){
   - 在第二次进入定时器中断回调函数后模拟大写键释放操作
   - 第三次溢出进入定时器中断是执行关闭定时器操作
 
-#### 输入前后检查
+##### 输入前后检查
 
 是否正确输入字符的关键在于执行键盘按下即发送按键描述数据包时主机环境的正确性，因此，为尽可能保证正确，我们在发送前和发送后对主机大小写环境进行检测，若两者之一不是大写环境则进行回退操作。
 
 - 输入前：空循环判断是否为大写环境
 - 输入后：设置全局变量对输入后环境进行描述若不为大写环境则进行回退操作
 
-#### 最终示例代码
+#### 修改补充自定义函数
 
-代码如下：
+##### 自定义中断陷阱函数
 
 ```c
-//In usbd_custom_hid_if.c
-static int8_t CUSTOM_HID_OutEvent_FS(uint8_t event_idx, uint8_t state)
-{
-  /* USER CODE BEGIN 6 */
-
-	//View received data length
-//	USB_Received_Count = USBD_GetRxCount(&hUsbDeviceFS, CUSTOM_HID_EPOUT_ADDR);
-//	printf("USB_Received_Count = %d \r\n",USB_Received_Count);
-//
-//	USB_Received_Count = USBD_GetRxCount(&hUsbDeviceFS, CUSTOM_HID_EPIN_ADDR);
-//	printf("USB_Received_Count_in = %d \r\n",USB_Received_Count);
-
-	//A pointer to the USBD-CUSTOM-HID_HandleTypeDef structure
-	USBD_CUSTOM_HID_HandleTypeDef *hhid;
-	//Obtain the storage address for USB receiving data
-	hhid = (USBD_CUSTOM_HID_HandleTypeDef*)hUsbDeviceFS.pClassData;
-	/*USBD_CUSTOMHID_INREPORT_BUF_SIZE is always 1,
-	 * Copy hhid->Report_buf[0] directly to recv_buffer[0]
-	 * by judging conditions,
-	 * aim to eliminating loop operations.
-	 */
-	//for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++)
-	//recv_buffer[i] = hhid->Report_buf[i];
-	if(((recv_buffer[0]=(hhid->Report_buf[0]))&0x02) != 0x02){
+//In main.c
+void InterruptTrap(int *InterruptFlag){
+	if(*InterruptFlag == 1){
+		*InterruptFlag = 0;
 		//Trigger timer interrupt immediately by setting the value of the register
 		TIM2->EGR |= TIM_EGR_UG;
-
+		//Second entry interrupt
 		MX_TIM2_Init();
 		HAL_TIM_Base_Start_IT(&htim2);
 	}
-	return (USBD_OK);
-  /* USER CODE END 6 */
 }
+```
 
+##### 自定义定时器中断回调函数
 
+```c
 //In main.c
-/* USER CODE BEGIN 4 */
-void Get_Descriptor(uint8_t ascii){
-	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
-	uint8_t pos = Map[ascii];
-	sent_buffer[(uint8_t)(pos>>4)] |= (1<<((uint8_t)(pos&0x07)));
-	if((pos&0x08) == 8)
-		sent_buffer[0] |= 0x02;
-}
-
-void SimulateKeyPress(uint8_t ascii){
-    //get key:ascii Descriptor
-    Get_Descriptor(ascii);
-    //Ensure that this instruction is executed in uppercase environment.
-    while((recv_buffer[0]&0x02) != 0x02)
-    	HAL_Delay(1);
-    //Sent Descriptor report
-    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
-    if((recv_buffer[0]&0x02) != 0x02)
-    	NeedRollBack = 1;
-}
-
-void SimulateKeyRelease(){
-    //set 0
-	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
-    //Sent Descriptor report
-	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
-}
-
-void SimulateKeyStroke(uint8_t ascii){
-	SimulateKeyPress(ascii);
-    HAL_Delay(StrokeSlot); //Wait StrokeSlot time
-    SimulateKeyRelease();
-    HAL_Delay(StrokeSlot); //Wait StrokeSlot time
-}
-
-void SimulateKeyStrokes(char *str, int len, int *cntNow){
-    for(; *cntNow < len; (*cntNow)++){
-    	//Ensure func SimulateKeyStroke is executed in uppercase environment.
-    	if((recv_buffer[0]&0x02) != 0x02){
-    		SimulateKeyStroke(128);
-    	}
-    	SimulateKeyStroke(str[*cntNow]);
-    	//Determine if RollBack is necessary
-    	if(NeedRollBack == 1){
-    		NeedRollBack = 0;
-    		(*cntNow)--;
-    		SimulateKeyStroke(129);
-    	}
-    }
-}
-
-void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]){
-	HAL_Delay(StrokeSlot);
-	for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++){
-		for(int j = 0; j < 8; j++){
-			SimulateKeyStroke(((Recv_Buf[i]&(uint8_t)(0x01<<j))>>j)+'0');
-		}
-	}
-	SimulateKeyStroke('\n');
-}
-
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim2){
 		if(InterruptCnt == 0){
@@ -403,28 +323,98 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		InterruptCnt = (InterruptCnt+1)%3;
 	}
 }
+```
 
-//In stm32f0xx_hal_pcd.c
-HAL_StatusTypeDef HAL_PCD_EP_Transmit(PCD_HandleTypeDef *hpcd, uint8_t ep_addr, uint8_t *pBuf, uint32_t len)
-{
-  PCD_EPTypeDef *ep;
+##### 修改输入输出函数
 
-  ep = &hpcd->IN_ep[ep_addr & EP_ADDR_MSK];
-
-  /*setup and start the Xfer */
-  ep->xfer_buff = pBuf;
-  ep->xfer_len = len;
-  ep->xfer_fill_db = 1U;
-  ep->xfer_len_db = len;
-  ep->xfer_count = 0U;
-  ep->is_in = 1U;
-  ep->num = ep_addr & EP_ADDR_MSK;
-
-  (void)USB_EPStartXfer(hpcd->Instance, ep);
-  //output test to choose whether to RollBack
-  if((recv_buffer[0]&0x02) != 0x02)
-	  NeedRollBack = 1;
-  return HAL_OK;
+```c
+//In main.c
+//按键按下子过程
+void SimulateKeyPress(uint8_t ascii){
+    //get key:ascii Descriptor
+    Get_Descriptor(ascii);
+    //Ensure that this instruction is executed in uppercase environment.
+//    while((recv_buffer[0]&0x02) != 0x02)
+//    	HAL_Delay(1);
+    //Sent Descriptor report
+    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+    if((recv_buffer[0]&0x02) != 0x02)
+    	NeedRollBack = 1;
 }
+//按键松开子过程
+void SimulateKeyRelease(){
+    //set 0
+	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+    //Sent Descriptor report
+	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+}
+//按键总过程
+void SimulateKeyStroke(uint8_t ascii){
+	SimulateKeyPress(ascii);
+    HAL_Delay(StrokeSlot); //Wait StrokeSlot time
+    SimulateKeyRelease();
+    HAL_Delay(StrokeSlot); //Wait StrokeSlot time
+}
+//输出目标字符串
+void SimulateKeyStrokes(char *str, int len, int *cntNow){
+    for(; *cntNow < len; (*cntNow)++){
+    	//Ensure func SimulateKeyStroke is executed in uppercase environment.
+    	if((recv_buffer[0]&0x02) != 0x02){
+    		SimulateKeyStroke(128);
+    	}
+    	SimulateKeyStroke(str[*cntNow]);
+    	//Determine if RollBack is necessary
+    	if(NeedRollBack == 1){
+    		NeedRollBack = 0;
+    		(*cntNow)--;
+    		SimulateKeyStroke(129);
+    	}
+    }
+}
+//输出接收数据包(1Byte)检测
+void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]){
+	HAL_Delay(StrokeSlot);
+	for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++){
+		for(int j = 0; j < 8; j++){
+			SimulateKeyStroke(((Recv_Buf[i]&(uint8_t)(0x01<<j))>>j)+'0');
+		}
+	}
+	SimulateKeyStroke('\n');
+}
+//设计中断后弃用函数
+void InitKeyboardStatus(){//Convert keyboard to uppercase mode
+	SimulateKeyStroke(128);
+	HAL_Delay(StrokeSlot);
+	if((recv_buffer[0]&0x02) != 0x02){
+		SimulateKeyStroke(128);
+		PrintRecvBuf(recv_buffer);  //print Keyboard LED Status
+	}
+}
+```
+
+##### 修改PCD文件
+
+发送数据包的函数调用过程如下：
+
+`USBD_CUSTOM_HID_SendReport`$\Rightarrow$`USBD_LL_Transmit`$\Rightarrow$`HAL_PCD_EP_Transmit`$\Rightarrow$==`HAL_PCD_EP_Transmit`==
+
+我们将`HAL_PCD_EP_Transmit`函数(位于`stm32f0xx_hal_pcd.c`文件中)作如下修改，同时添加**外部声明**与**宏定义**：
+
+```c
+//In stm32f0xx_hal_pcd.c:
+//(1).Add these external declarations at the beginning of this file:
+#define USBD_CUSTOMHID_INREPORT_BUF_SIZE 1
+extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
+extern int InterruptFlag;
+extern int NeedRollBack;
+//(2).In function: HAL_StatusTypeDef HAL_PCD_EP_Transmit();
+//Add following codes **before** USB_EPStartXfer function:
+    //Determine whether to generate an interrupt:
+    if((recv_buffer[0]&0x02) != 0x02)
+        InterruptFlag = 1;
+//Add following codes **after** USB_EPStartXfer function:
+    //Output test to choose whether to RollBack:
+    if((recv_buffer[0]&0x02) != 0x02)
+        NeedRollBack = 1;
 ```
 

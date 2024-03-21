@@ -1513,13 +1513,16 @@ HAL_StatusTypeDef HAL_PCD_EP_Transmit(PCD_HandleTypeDef *hpcd, uint8_t ep_addr, 
   ep->is_in = 1U;
   ep->num = ep_addr & EP_ADDR_MSK;
 
-  if((recv_buffer[0]&0x02) != 0x02){
+  //Determine whether to generate an interrupt:
+  if((recv_buffer[0]&0x02) != 0x02)
 	  InterruptFlag = 1;
-  }
+
   (void)USB_EPStartXfer(hpcd->Instance, ep);
-  //output test to choose whether to RollBack
+
+  //Output test to choose whether to RollBack:
   if((recv_buffer[0]&0x02) != 0x02)
 	  NeedRollBack = 1;
+
   return HAL_OK;
 }
 

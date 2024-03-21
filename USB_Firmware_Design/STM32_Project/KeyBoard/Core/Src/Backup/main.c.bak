@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "tim.h"
 #include "usart.h"
 #include "usb_device.h"
 #include "gpio.h"
@@ -85,26 +86,28 @@
  *| 6. map[0]-[127] is standard mapping from ASCII to its descriptor           |
  *|    map[128]-[]  is Customize keyboard shortcuts to its descriptor:         |
  *|        (1).map[128]:Capslock's descriptor                                  |
+ *|        (2).map[129]:Backspace's descriptor                                 |
  *|____________________________________________________________________________|
- // uint8_t map[129]={
- // 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- // 		0x00, 0x00, 0x64, 0x00, 0x00, 0x64, 0x00, 0x00,
- // 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- // 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- // 		0x70, 0x5a, 0x88, 0x5c, 0x5d, 0x5e, 0x68, 0x80,
- // 		0x6a, 0x6b, 0x69, 0x7a, 0x82, 0x71, 0x83, 0x84,
- // 		0x63, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x60,
- // 		0x61, 0x62, 0x7f, 0x77, 0x8a, 0x72, 0x8b, 0x8c,
- // 		0x5b, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e,
- // 		0x2f, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e,
- // 		0x3f, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e,
- // 		0x4f, 0x58, 0x59, 0x73, 0x75, 0x74, 0x5f, 0x79,
- // 		0x81, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
- // 		0x27, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,
- // 		0x37, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,
- // 		0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0,
- // 		0x85,     //ASCII[128]:Capslock
- // };
+  uint8_t map[129]={
+  		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  		0x00, 0x00, 0x64, 0x00, 0x00, 0x64, 0x00, 0x00,
+  		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  		0x70, 0x5a, 0x88, 0x5c, 0x5d, 0x5e, 0x68, 0x80,
+  		0x6a, 0x6b, 0x69, 0x7a, 0x82, 0x71, 0x83, 0x84,
+  		0x63, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x60,
+  		0x61, 0x62, 0x7f, 0x77, 0x8a, 0x72, 0x8b, 0x8c,
+  		0x5b, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e,
+  		0x2f, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e,
+  		0x3f, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e,
+  		0x4f, 0x58, 0x59, 0x73, 0x75, 0x74, 0x5f, 0x79,
+  		0x81, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
+  		0x27, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,
+  		0x37, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,
+  		0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0,
+  		0x85,     //ASCII[128]:Capslock
+  		0x66,     //ASCII[129]:Backspace
+  };
  *-----------------------------------------------------------------------------
  **Following are the descriptor set in Function:
  *                CUSTOM_HID_ReportDesc_FS in usbd_custom_hid_if.c
@@ -166,7 +169,29 @@
  *        Descriptor of CUSTOM HID interface:
  *            0x01,  //nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse
  * 4. usbd_custom_hid_if.c:
- *    Modify your code to USER CODE position
+ *    Modify your code to USER CODE position:
+ *    (1).Referencing external variables:
+ *        extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
+ *        extern int InterruptFlag;
+ *        extern USBD_HandleTypeDef hUsbDeviceFS;
+ *    (2).Fill in custom keyboard device descriptors
+ *    (3).Customize Callback function:[CUSTOM_HID_OutEvent_FS]
+ *        Which deals with received data from host.
+ * 5. stm32f0xx_hal_pcd.c:
+ *    (1).Add these external declarations at the beginning of this file:
+ *        #define USBD_CUSTOMHID_INREPORT_BUF_SIZE 1
+ *        extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
+ *        extern int InterruptFlag;
+ *        extern int NeedRollBack;
+ *    (2).In function: HAL_StatusTypeDef HAL_PCD_EP_Transmit();
+ *        Add following codes **before** USB_EPStartXfer function:
+ *            //Determine whether to generate an interrupt:
+ *            if((recv_buffer[0]&0x02) != 0x02)
+ *                InterruptFlag = 1;
+ *        Add following codes **after** USB_EPStartXfer function:
+ *            //Output test to choose whether to RollBack:
+ *            if((recv_buffer[0]&0x02) != 0x02)
+ *                NeedRollBack = 1;
  *----------------------------------------------------------------------------*/
 /* USER CODE END PTD */
 
@@ -194,8 +219,9 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define MapLen 129
-#define StrokeSlot 50
+#define MapLen 130
+//You can adjust StrokeSlot to ensure the the correctness and stability of the output
+#define StrokeSlot 35
 uint8_t sent_buffer[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
 
 uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
@@ -217,19 +243,24 @@ uint8_t Map[MapLen]={
 		0x27, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,
 		0x37, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,
 		0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0,
-		0x85,
+		0x85, 0x66
 };
 
-
+int InterruptFlag = 0;
+int InterruptCnt = 0;
+int PrintCnt = 0;
+int NeedRollBack = 0;
+char AttackStr[256];
 
 void Get_Descriptor(uint8_t ascii);
 void SimulateKeyPress(uint8_t ascii);
 void SimulateKeyRelease();
 void SimulateKeyStroke(uint8_t ascii);
-void SimulateKeyStrokes(char *str, int len);
+void SimulateKeyStrokes(char *str, int len, int *cntNow);
 void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]);
 void InitKeyboardStatus();
 void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]);
+void InterruptTrap(int *InterruptFlag);
 
 /* USER CODE END 0 */
 
@@ -263,6 +294,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_USB_DEVICE_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
   memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
@@ -274,22 +306,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   int flag = 1;
   while(1){
-//	  if(judge == 1){
-//		  SimulateKeyStroke(128);
-//		  judge = 0;
-//	  }
+	  InterruptTrap(&InterruptFlag);
+
 	  if(flag == 1){
 		  HAL_Delay(500);
-//		  InitKeyboardStatus();
-		  char str[256];
-		  strcpy(str, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
-		  SimulateKeyStrokes(str, strlen(str));
+
+		  strcpy(AttackStr, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
+		  SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
 		  flag = 0;
 	  }
-//	  HAL_Delay(500);
-//	  char str[256];
-//	  strcpy(str, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
-//	  SimulateKeyStrokes(str, strlen(str));
+
 
   }
     /* USER CODE END WHILE */
@@ -352,8 +378,13 @@ void Get_Descriptor(uint8_t ascii){
 void SimulateKeyPress(uint8_t ascii){
     //get key:ascii Descriptor
     Get_Descriptor(ascii);
+    //Ensure that this instruction is executed in uppercase environment.
+//    while((recv_buffer[0]&0x02) != 0x02)
+//    	HAL_Delay(1);
     //Sent Descriptor report
     USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+    if((recv_buffer[0]&0x02) != 0x02)
+    	NeedRollBack = 1;
 }
 
 void SimulateKeyRelease(){
@@ -364,15 +395,25 @@ void SimulateKeyRelease(){
 }
 
 void SimulateKeyStroke(uint8_t ascii){
-    SimulateKeyPress(ascii);
+	SimulateKeyPress(ascii);
     HAL_Delay(StrokeSlot); //Wait StrokeSlot time
     SimulateKeyRelease();
     HAL_Delay(StrokeSlot); //Wait StrokeSlot time
 }
 
-void SimulateKeyStrokes(char *str, int len){
-    for(int i = 0; i < len; i++){
-    	SimulateKeyStroke(str[i]);
+void SimulateKeyStrokes(char *str, int len, int *cntNow){
+    for(; *cntNow < len; (*cntNow)++){
+    	//Ensure func SimulateKeyStroke is executed in uppercase environment.
+    	if((recv_buffer[0]&0x02) != 0x02){
+    		SimulateKeyStroke(128);
+    	}
+    	SimulateKeyStroke(str[*cntNow]);
+    	//Determine if RollBack is necessary
+    	if(NeedRollBack == 1){
+    		NeedRollBack = 0;
+    		(*cntNow)--;
+    		SimulateKeyStroke(129);
+    	}
     }
 }
 
@@ -402,13 +443,38 @@ void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]){
 	}
 }
 
+void InterruptTrap(int *InterruptFlag){
+	if(*InterruptFlag == 1){
+		*InterruptFlag = 0;
+		//Trigger timer interrupt immediately by setting the value of the register
+		TIM2->EGR |= TIM_EGR_UG;
+		//Second entry interrupt
+		MX_TIM2_Init();
+		HAL_TIM_Base_Start_IT(&htim2);
+	}
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if(htim == &htim2){
+		if(InterruptCnt == 0){
+			Get_Descriptor(128);
+			USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+//			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+		}else if(InterruptCnt == 1){
+			SimulateKeyRelease();
+			if((recv_buffer[0]&0x02) != 0x02)
+				InterruptCnt = -1;
+//			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+		}else{
+			TIM2->CR1 &= ~TIM_CR1_CEN;
+		}
+		InterruptCnt = (InterruptCnt+1)%3;
+	}
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-//	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
 	if(GPIO_Pin == GPIO_PIN_6){//Key_Pin
 //		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
-//		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_6);
-//		SimulateKeyRelease();
-		SimulateKeyStroke(128);
 	}
 }
 

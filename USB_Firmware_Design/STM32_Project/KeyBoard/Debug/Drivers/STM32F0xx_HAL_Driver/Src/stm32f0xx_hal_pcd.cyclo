@@ -24,10 +24,10 @@
 ../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1465:19:HAL_PCD_EP_Receive	1
 ../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1489:10:HAL_PCD_EP_GetRxCount	1
 ../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1501:19:HAL_PCD_EP_Transmit	3
-../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1532:19:HAL_PCD_EP_SetStall	4
-../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1570:19:HAL_PCD_EP_ClrStall	4
-../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1606:19:HAL_PCD_EP_Abort	2
-../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1632:19:HAL_PCD_EP_Flush	1
-../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1646:19:HAL_PCD_ActivateRemoteWakeup	1
-../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1656:19:HAL_PCD_DeActivateRemoteWakeup	1
-../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1685:18:HAL_PCD_GetState	1
+../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1535:19:HAL_PCD_EP_SetStall	4
+../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1573:19:HAL_PCD_EP_ClrStall	4
+../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1609:19:HAL_PCD_EP_Abort	2
+../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1635:19:HAL_PCD_EP_Flush	1
+../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1649:19:HAL_PCD_ActivateRemoteWakeup	1
+../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1659:19:HAL_PCD_DeActivateRemoteWakeup	1
+../Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c:1688:18:HAL_PCD_GetState	1

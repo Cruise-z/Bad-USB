@@ -57,7 +57,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_hal.h"
 
-
 #define USBD_CUSTOMHID_INREPORT_BUF_SIZE 1
 extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
 extern int InterruptFlag;

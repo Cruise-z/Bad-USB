@@ -726,13 +726,7 @@ uint8_t USBD_CUSTOM_HID_ReceivePacket(USBD_HandleTypeDef *pdev)
   /* Resume USB Out process */
   (void)USBD_LL_PrepareReceive(pdev, CUSTOMHIDOutEpAdd, hhid->Report_buf,
                                USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
-  /*USBD_CUSTOMHID_INREPORT_BUF_SIZE is always 1,
-   * Copy hhid->Report_buf[0] directly to recv_buffer[0]
-   * By judging conditions,
-   * Aiming to eliminating loop operations:
-   * for(int i = 0; i < USBD_CUSTOMHID_INREPORT_BUF_SIZE; i++)
-   *     recv_buffer[i] = hhid->Report_buf[i];
-   */
+
   if(((recv_buffer[0]=(hhid->Report_buf[0]))&0x02) != 0x02){
 	  InterruptFlag = 1;
   }

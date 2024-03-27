@@ -171,9 +171,12 @@
  * 4. usbd_custom_hid_if.c:
  *    Modify your code to USER CODE position:
  *    (1).Referencing external variables:
- *        extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
- *        extern int InterruptFlag;
- *        extern USBD_HandleTypeDef hUsbDeviceFS;
+ *        (1).if stm32f0xx:
+ *            extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
+ *            extern int InterruptFlag;
+ *            extern USBD_HandleTypeDef hUsbDeviceFS;
+ *        (2).if stm32l4xx:
+ *            Skip this step;
  *    (2).Fill in custom keyboard device descriptors
  *    (3).Customize Callback function:[CUSTOM_HID_OutEvent_FS]
  *        Which deals with received data from host.
@@ -194,14 +197,13 @@
  *          if(((recv_buffer[0]=(hhid->Report_buf[0]))&0x02) != 0x02){
  *              InterruptFlag = 1;
  *          }
- *          return (uint8_t)USBD_OK;
  * 5. stm32l4xx_hal_pcd.c/stm32f0xx_hal_pcd.c:
  *    (1).Add these external declarations at the beginning of this file:
  *        #define USBD_CUSTOMHID_INREPORT_BUF_SIZE 1
  *        extern uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
  *        extern int InterruptFlag;
  *        extern int NeedRollBack;
- *    (2).In function: HAL_StatusTypeDef HAL_PCD_EP_Transmit();
+ *    (2).In function: HAL_StatusTypeDef HAL_PCD_EP_Transmit();(line 2049)
  *        Add following codes **before** USB_EPStartXfer function:
  *            //Determine whether to generate an interrupt:
  *            if((recv_buffer[0]&0x02) != 0x02)
@@ -324,10 +326,9 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   int flag = 1;
-  while (1)
-  {
-    /* USER CODE END WHILE */
+  while(1){
 	  InterruptTrap(&InterruptFlag);
+
 	  if(flag == 1){
 		  HAL_Delay(500);
 		  char AttackStr[256];
@@ -335,8 +336,11 @@ int main(void)
 		  SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
 		  flag = 0;
 	  }
-    /* USER CODE BEGIN 3 */
+
+
   }
+  /* USER CODE END WHILE */
+  /* USER CODE BEGIN 3 */
   /* USER CODE END 3 */
 }
 
@@ -372,7 +376,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
   RCC_OscInitStruct.PLL.PLLM = 1;
-  RCC_OscInitStruct.PLL.PLLN = 40;
+  RCC_OscInitStruct.PLL.PLLN = 24;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
@@ -390,7 +394,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }

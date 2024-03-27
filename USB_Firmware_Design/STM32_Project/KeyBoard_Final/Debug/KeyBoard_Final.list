@@ -29,9 +29,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
  12 .comment      00000043  00000000  00000000  00020174  2**0
                   CONTENTS, READONLY
- 13 .debug_info   000228a0  00000000  00000000  000201b7  2**0
+ 13 .debug_info   000228a1  00000000  00000000  000201b7  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_abbrev 0000501c  00000000  00000000  00042a57  2**0
+ 14 .debug_abbrev 0000501c  00000000  00000000  00042a58  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  15 .debug_aranges 000013e0  00000000  00000000  00047a78  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
@@ -502,33 +502,33 @@ void Error_Handler(void)
  8000588:	f8d2 3090 	ldr.w	r3, [r2, #144]	; 0x90
  800058c:	f023 0318 	bic.w	r3, r3, #24
  8000590:	f8c2 3090 	str.w	r3, [r2, #144]	; 0x90
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
- 8000594:	2260      	movs	r2, #96	; 0x60
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
- 8000596:	2301      	movs	r3, #1
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
- 8000598:	920d      	str	r2, [sp, #52]	; 0x34
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
- 800059a:	2202      	movs	r2, #2
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
- 800059c:	2028      	movs	r0, #40	; 0x28
+ 8000594:	2301      	movs	r3, #1
   RCC_OscInitStruct.MSICalibrationValue = 0;
- 800059e:	e9cd 340b 	strd	r3, r4, [sp, #44]	; 0x2c
+ 8000596:	e9cd 340b 	strd	r3, r4, [sp, #44]	; 0x2c
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+ 800059a:	2402      	movs	r4, #2
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
- 80005a2:	e9cd 230f 	strd	r2, r3, [sp, #60]	; 0x3c
+ 800059c:	e9cd 430f 	strd	r4, r3, [sp, #60]	; 0x3c
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
- 80005a6:	9307      	str	r3, [sp, #28]
+ 80005a0:	9307      	str	r3, [sp, #28]
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+ 80005a2:	2260      	movs	r2, #96	; 0x60
   RCC_OscInitStruct.PLL.PLLM = 1;
- 80005a8:	9311      	str	r3, [sp, #68]	; 0x44
+ 80005a4:	9311      	str	r3, [sp, #68]	; 0x44
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
- 80005aa:	2307      	movs	r3, #7
- 80005ac:	e9cd 0312 	strd	r0, r3, [sp, #72]	; 0x48
+ 80005a6:	2118      	movs	r1, #24
+ 80005a8:	2307      	movs	r3, #7
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
- 80005b0:	a805      	add	r0, sp, #20
+ 80005aa:	a805      	add	r0, sp, #20
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
+ 80005ac:	e9cd 1312 	strd	r1, r3, [sp, #72]	; 0x48
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
- 80005b2:	e9cd 2214 	strd	r2, r2, [sp, #80]	; 0x50
+ 80005b0:	e9cd 4414 	strd	r4, r4, [sp, #80]	; 0x50
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE|RCC_OSCILLATORTYPE_MSI;
- 80005b6:	9505      	str	r5, [sp, #20]
+ 80005b4:	9505      	str	r5, [sp, #20]
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+ 80005b6:	920d      	str	r2, [sp, #52]	; 0x34
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
  80005b8:	f001 fbf0 	bl	8001d9c <HAL_RCC_OscConfig>
  80005bc:	b108      	cbz	r0, 80005c2 <SystemClock_Config+0x6a>
@@ -542,12 +542,12 @@ void Error_Handler(void)
  80005c8:	2303      	movs	r3, #3
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
  80005ca:	9004      	str	r0, [sp, #16]
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
- 80005cc:	2104      	movs	r1, #4
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+ 80005cc:	4621      	mov	r1, r4
  80005ce:	4668      	mov	r0, sp
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
  80005d0:	e9cd 2300 	strd	r2, r3, [sp]
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
  80005d4:	f001 fe86 	bl	80022e4 <HAL_RCC_ClockConfig>
  80005d8:	b108      	cbz	r0, 80005de <SystemClock_Config+0x86>
  80005da:	b672      	cpsid	i

@@ -22,7 +22,6 @@
 #include "usbd_storage_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-#include "W25QXX.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,8 +65,10 @@
 
 
 /* USER CODE BEGIN PRIVATE_DEFINES */
-#define STORAGE_BLK_NBR                  512
-#define STORAGE_BLK_SIZ                  4096
+#define FLASH_START_ADDR            0x08020000  //last 128KB
+
+#define STORAGE_BLK_NBR                  16
+#define FLASH_PAGE_NBR                   64
 /* USER CODE END PRIVATE_DEFINES */
 
 /**
@@ -177,7 +178,6 @@ USBD_StorageTypeDef USBD_Storage_Interface_fops_FS =
 int8_t STORAGE_Init_FS(uint8_t lun)
 {
   /* USER CODE BEGIN 2 */
-	W25QXX_Init();
   return (USBD_OK);
   /* USER CODE END 2 */
 }
@@ -192,8 +192,8 @@ int8_t STORAGE_Init_FS(uint8_t lun)
 int8_t STORAGE_GetCapacity_FS(uint8_t lun, uint32_t *block_num, uint16_t *block_size)
 {
   /* USER CODE BEGIN 3 */
-  *block_num  = STORAGE_BLK_NBR;
-  *block_size = STORAGE_BLK_SIZ;
+	*block_num  = FLASH_PAGE_NBR;
+	*block_size = FLASH_PAGE_SIZE;
   return (USBD_OK);
   /* USER CODE END 3 */
 }
@@ -206,9 +206,6 @@ int8_t STORAGE_GetCapacity_FS(uint8_t lun, uint32_t *block_num, uint16_t *block_
 int8_t STORAGE_IsReady_FS(uint8_t lun)
 {
   /* USER CODE BEGIN 4 */
-	u16 flash_ID;
-	flash_ID =W25QXX_ReadID();
-	printf("flash_ID:%d \r\n",flash_ID);//非必须，如需要调试，包含stdio.h头文件，启用串口
   return (USBD_OK);
   /* USER CODE END 4 */
 }
@@ -233,10 +230,11 @@ int8_t STORAGE_IsWriteProtected_FS(uint8_t lun)
 int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 6 */
-	blk_addr += SPI_FLASH_START_SECTOR;
-	SPI_FLASH_BufferRead(buf, blk_addr * SPI_FLASH_SECTOR_SIZE, blk_len * SPI_FLASH_SECTOR_SIZE);
-//	memcpy(buf, (uint8_t*)(FLASH_START_ADDR + blk_addr * STORAGE_BLK_SIZ), blk_len * STORAGE_BLK_SIZ);
-  return (USBD_OK);
+	if(lun == 0){
+		memcpy(buf, (uint8_t*)(FLASH_START_ADDR + blk_addr * FLASH_PAGE_SIZE), blk_len * FLASH_PAGE_SIZE);
+		return (USBD_OK);
+	}
+  return (USBD_FAIL);
   /* USER CODE END 6 */
 }
 
@@ -248,18 +246,26 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
 int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */
-	uint32_t write_addr;
-	blk_addr +=SPI_FLASH_START_SECTOR;
-	write_addr = blk_addr * SPI_FLASH_SECTOR_SIZE;
-	SPI_FLASH_SectorErase(write_addr);
-	SPI_FLASH_BufferWrite((uint8_t*)buf, write_addr, blk_len * SPI_FLASH_SECTOR_SIZE);
-//	UNUSED(lun);
-//	UNUSED(buf);
-//	UNUSED(blk_addr);
-//	UNUSED(blk_len);
-//
-//	memcpy((uint8_t*)(FLASH_START_ADDR + blk_addr * STORAGE_BLK_SIZ), buf,  blk_len * STORAGE_BLK_SIZ);
-  return (USBD_OK);
+	if(lun == 0){
+		uint16_t i;
+		HAL_FLASH_Unlock();
+		FLASH_EraseInitTypeDef f;
+		f.TypeErase = FLASH_TYPEERASE_PAGES;
+		f.Banks = FLASH_BANK_BOTH;
+		f.Page = (FLASH_START_ADDR + blk_addr*FLASH_PAGE_SIZE)/FLASH_PAGE_SIZE;
+		f.NbPages = blk_len;
+		uint32_t PageError = 0;
+		HAL_FLASHEx_Erase(&f, &PageError);
+
+		for(i=0;i<blk_len*FLASH_PAGE_SIZE;i+=8)
+			HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
+					FLASH_START_ADDR + blk_addr*FLASH_PAGE_SIZE + i,
+					*(uint64_t *)(&buf[i]));
+
+		HAL_FLASH_Lock();
+		return USBD_OK;
+	}
+  return (USBD_FAIL);
   /* USER CODE END 7 */
 }
 

@@ -40,7 +40,6 @@ CPP_DEPS :=
 SUBDIRS := \
 Core/Src \
 Core/Startup \
-Drivers/MyDriver/Src \
 Drivers/STM32L4xx_HAL_Driver/Src \
 Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Src \
 Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src \

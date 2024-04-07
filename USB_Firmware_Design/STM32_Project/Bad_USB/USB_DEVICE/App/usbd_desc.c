@@ -33,7 +33,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+int isMSC;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -62,12 +62,13 @@
   * @{
   */
 
-#define USBD_VID     1155
+#define USBD_VID     1152
 #define USBD_LANGID_STRING     1033
 #define USBD_MANUFACTURER_STRING     "ZRZ"
 //This config
-#define USBD_PID_FS     22314
-#define USBD_PRODUCT_STRING_FS     "STM32 Mass Storage"
+#define USBD_PID_FS     21000
+#define USBD_PID_FS_HID     22512
+#define USBD_PRODUCT_STRING_FS     "ZRZ Mass Storage"
 #define USBD_CONFIGURATION_STRING_FS     "MSC Config"
 #define USBD_INTERFACE_STRING_FS     "MSC Interface"
 
@@ -181,6 +182,34 @@ __ALIGN_BEGIN uint8_t USBD_FS_DeviceDesc[USB_LEN_DEV_DESC] __ALIGN_END =
   USBD_MAX_NUM_CONFIGURATION  /*bNumConfigurations*/
 };
 
+/* This is HID_Keyboard Device Desc*/
+__ALIGN_BEGIN uint8_t USBD_FS_DeviceDesc_HID[USB_LEN_DEV_DESC] __ALIGN_END =
+{
+  0x12,                       /*bLength */
+  USB_DESC_TYPE_DEVICE,       /*bDescriptorType*/
+#if (USBD_LPM_ENABLED == 1)
+  0x01,                       /*bcdUSB */ /* changed to USB version 2.01
+                                             in order to support LPM L1 suspend
+                                             resume test of USBCV3.0*/
+#else
+  0x00,                       /*bcdUSB */
+#endif /* (USBD_LPM_ENABLED == 1) */
+  0x02,
+  0x00,                       /*bDeviceClass*/
+  0x00,                       /*bDeviceSubClass*/
+  0x00,                       /*bDeviceProtocol*/
+  USB_MAX_EP0_SIZE,           /*bMaxPacketSize*/
+  LOBYTE(USBD_VID),           /*idVendor*/
+  HIBYTE(USBD_VID),           /*idVendor*/
+  LOBYTE(USBD_PID_FS_HID),    /*idProduct of HID*/
+  HIBYTE(USBD_PID_FS_HID),    /*idProduct of HID*/
+  0x00,                       /*bcdDevice rel. 2.00*/
+  0x02,
+  USBD_IDX_MFC_STR,           /*Index of manufacturer  string*/
+  USBD_IDX_PRODUCT_STR,       /*Index of product string*/
+  USBD_IDX_SERIAL_STR,        /*Index of serial number string*/
+  USBD_MAX_NUM_CONFIGURATION  /*bNumConfigurations*/
+};
 /* USB_DeviceDescriptor */
 /** BOS descriptor. */
 #if (USBD_LPM_ENABLED == 1)
@@ -260,7 +289,10 @@ uint8_t * USBD_FS_DeviceDescriptor(USBD_SpeedTypeDef speed, uint16_t *length)
 {
   UNUSED(speed);
   *length = sizeof(USBD_FS_DeviceDesc);
-  return USBD_FS_DeviceDesc;
+  if(isMSC == 1)
+	  return USBD_FS_DeviceDesc;
+  else
+	  return USBD_FS_DeviceDesc_HID;
 }
 
 /**

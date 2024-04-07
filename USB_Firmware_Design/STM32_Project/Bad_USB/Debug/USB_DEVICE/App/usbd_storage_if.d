@@ -43,9 +43,7 @@ USB_DEVICE/App/usbd_storage_if.o: ../USB_DEVICE/App/usbd_storage_if.c \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h \
  C:/Data/Work/STM32/Bad_USB/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc/usbd_msc_scsi.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h \
- ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
- C:/Data/Work/STM32/Bad_USB/Drivers/MyDriver/Inc/W25QXX.h \
- ../Core/Inc/spi.h ../Core/Inc/main.h
+ ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
 ../USB_DEVICE/App/usbd_storage_if.h:
 C:/Data/Work/STM32/Bad_USB/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc/usbd_msc.h:
 C:/Data/Work/STM32/Bad_USB/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc/usbd_msc_bot.h:
@@ -92,6 +90,3 @@ C:/Data/Work/STM32/Bad_USB/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc
 C:/Data/Work/STM32/Bad_USB/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc/usbd_msc_scsi.h:
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h:
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h:
-C:/Data/Work/STM32/Bad_USB/Drivers/MyDriver/Inc/W25QXX.h:
-../Core/Inc/spi.h:
-../Core/Inc/main.h:

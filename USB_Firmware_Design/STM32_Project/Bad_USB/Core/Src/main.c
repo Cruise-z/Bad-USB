@@ -28,7 +28,6 @@
 /* USER CODE BEGIN Includes */
 #include "usbd_customhid.h"
 #include "usb_device_MSC.h"
-#include "W25QXX.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -231,6 +230,7 @@
 
 /* USER CODE BEGIN PV */
 extern USBD_HandleTypeDef hUsbDeviceFS;
+extern int isMSC;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -322,8 +322,8 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   int flag = 0;
+  isMSC = 1;
   MX_USB_DEVICE_Init_MSC();
-  W25QXX_Init();
 
   uint8_t Map[MapLen] = Map_Init;
   memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
@@ -338,7 +338,7 @@ int main(void)
 	  InterruptTrap(&InterruptFlag);
 
 	  if(flag == 1){
-		  HAL_Delay(3000);
+		  HAL_Delay(30000);
 		  SwitchToHID();
 		  char AttackStr[256];
 		  strcpy(AttackStr, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
@@ -426,6 +426,7 @@ void SimulateUSB_plugin(){
 
 void SwitchToHID(){
 	SimulateUSB_unplug();
+	isMSC = 0;
 	HAL_Delay(PlugSlot);
 	SimulateUSB_plugin();
 	MX_TIM2_Init();
@@ -435,10 +436,10 @@ void SwitchToHID(){
 
 void SwitchToMSC(){
 	SimulateUSB_unplug();
+	isMSC = 1;
 	HAL_Delay(PlugSlot);
 	SimulateUSB_plugin();
 	MX_USB_DEVICE_Init_MSC();
-	W25QXX_Init();
 	HAL_Delay(PlugSlot*10);
 }
 

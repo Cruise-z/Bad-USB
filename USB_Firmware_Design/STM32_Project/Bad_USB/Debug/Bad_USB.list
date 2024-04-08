@@ -962,17 +962,12 @@ void SimulateKeyPress(uint8_t ascii){
  80008ae:	79fb      	ldrb	r3, [r7, #7]
  80008b0:	4618      	mov	r0, r3
  80008b2:	f7ff ff49 	bl	8000748 <Get_Single_Descriptor>
-    //Ensure that this instruction is executed in uppercase environment.
-//    while((recv_buffer[0]&0x02) != 0x02)
-//    	HAL_Delay(1);
     //Sent Descriptor report
     USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
  80008b6:	220f      	movs	r2, #15
  80008b8:	4903      	ldr	r1, [pc, #12]	; (80008c8 <SimulateKeyPress+0x24>)
  80008ba:	4804      	ldr	r0, [pc, #16]	; (80008cc <SimulateKeyPress+0x28>)
  80008bc:	f008 f838 	bl	8008930 <USBD_CUSTOM_HID_SendReport>
-//    if((recv_buffer[0]&0x02) != 0x02)
-//    	NeedRollBack = 1;
 }
  80008c0:	bf00      	nop
  80008c2:	3708      	adds	r7, #8

@@ -489,7 +489,7 @@ void SimulateKeyStroke(uint8_t ascii){
 	SimulateKeyPress(ascii);
 	HAL_Delay(StrokeSlot); //Wait StrokeSlot time
 	SimulateKeyRelease();
-    HAL_Delay(StrokeSlot); //Wait StrokeSlot time
+	HAL_Delay(StrokeSlot); //Wait StrokeSlot time
 }
 
 void SimulateShortcutKey(uint8_t *array, int num){

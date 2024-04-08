@@ -472,16 +472,16 @@ void Get_Multi_Descriptor(uint8_t *array, int num){
 }
 
 void SimulateKeyPress(uint8_t ascii){
-    //get key:ascii Descriptor
-    Get_Single_Descriptor(ascii);
-    //Sent Descriptor report
-    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
+	//get key:ascii Descriptor
+	Get_Single_Descriptor(ascii);
+	//Sent Descriptor report
+	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 }
 
 void SimulateKeyRelease(){
-    //set 0
+	//set 0
 	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
-    //Sent Descriptor report
+	//Sent Descriptor report
 	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 }
 

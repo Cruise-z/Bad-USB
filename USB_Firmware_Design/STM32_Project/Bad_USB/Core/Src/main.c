@@ -487,8 +487,8 @@ void SimulateKeyRelease(){
 
 void SimulateKeyStroke(uint8_t ascii){
 	SimulateKeyPress(ascii);
-    HAL_Delay(StrokeSlot); //Wait StrokeSlot time
-    SimulateKeyRelease();
+	HAL_Delay(StrokeSlot); //Wait StrokeSlot time
+	SimulateKeyRelease();
     HAL_Delay(StrokeSlot); //Wait StrokeSlot time
 }
 
@@ -501,19 +501,19 @@ void SimulateShortcutKey(uint8_t *array, int num){
 }
 
 void SimulateKeyStrokes(char *str, int len, int *cntNow){
-    for(; *cntNow < len; (*cntNow)++){
+	for(; *cntNow < len; (*cntNow)++){
     	//Ensure func SimulateKeyStroke is executed in uppercase environment.
-    	if((recv_buffer[0]&0x02) != 0x02){
-    		SimulateKeyStroke(128);
+		if((recv_buffer[0]&0x02) != 0x02){
+			SimulateKeyStroke(128);
     	}
-    	SimulateKeyStroke(str[*cntNow]);
-    	//Determine if RollBack is necessary
-    	if(NeedRollBack == 1){
-    		NeedRollBack = 0;
-    		(*cntNow)--;
-    		SimulateKeyStroke(129);
-    	}
-    }
+		SimulateKeyStroke(str[*cntNow]);
+		//Determine if RollBack is necessary
+		if(NeedRollBack == 1){
+			NeedRollBack = 0;
+			(*cntNow)--;
+			SimulateKeyStroke(129);
+		}
+	}
 }
 
 void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]){

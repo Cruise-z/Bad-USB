@@ -1011,10 +1011,10 @@ void SimulateKeyStroke(uint8_t ascii){
  80008fe:	79fb      	ldrb	r3, [r7, #7]
  8000900:	4618      	mov	r0, r3
  8000902:	f7ff ffcf 	bl	80008a4 <SimulateKeyPress>
-    HAL_Delay(StrokeSlot); //Wait StrokeSlot time
+	HAL_Delay(StrokeSlot); //Wait StrokeSlot time
  8000906:	2023      	movs	r0, #35	; 0x23
  8000908:	f000 fc02 	bl	8001110 <HAL_Delay>
-    SimulateKeyRelease();
+	SimulateKeyRelease();
  800090c:	f7ff ffe0 	bl	80008d0 <SimulateKeyRelease>
     HAL_Delay(StrokeSlot); //Wait StrokeSlot time
  8000910:	2023      	movs	r0, #35	; 0x23
@@ -1068,20 +1068,20 @@ void SimulateKeyStrokes(char *str, int len, int *cntNow){
  8000962:	60f8      	str	r0, [r7, #12]
  8000964:	60b9      	str	r1, [r7, #8]
  8000966:	607a      	str	r2, [r7, #4]
-    for(; *cntNow < len; (*cntNow)++){
+	for(; *cntNow < len; (*cntNow)++){
  8000968:	e025      	b.n	80009b6 <SimulateKeyStrokes+0x5a>
     	//Ensure func SimulateKeyStroke is executed in uppercase environment.
-    	if((recv_buffer[0]&0x02) != 0x02){
+		if((recv_buffer[0]&0x02) != 0x02){
  800096a:	4b18      	ldr	r3, [pc, #96]	; (80009cc <SimulateKeyStrokes+0x70>)
  800096c:	781b      	ldrb	r3, [r3, #0]
  800096e:	f003 0302 	and.w	r3, r3, #2
  8000972:	2b00      	cmp	r3, #0
  8000974:	d102      	bne.n	800097c <SimulateKeyStrokes+0x20>
-    		SimulateKeyStroke(128);
+			SimulateKeyStroke(128);
  8000976:	2080      	movs	r0, #128	; 0x80
  8000978:	f7ff ffbc 	bl	80008f4 <SimulateKeyStroke>
     	}
-    	SimulateKeyStroke(str[*cntNow]);
+		SimulateKeyStroke(str[*cntNow]);
  800097c:	687b      	ldr	r3, [r7, #4]
  800097e:	681b      	ldr	r3, [r3, #0]
  8000980:	461a      	mov	r2, r3
@@ -1090,26 +1090,26 @@ void SimulateKeyStrokes(char *str, int len, int *cntNow){
  8000986:	781b      	ldrb	r3, [r3, #0]
  8000988:	4618      	mov	r0, r3
  800098a:	f7ff ffb3 	bl	80008f4 <SimulateKeyStroke>
-    	//Determine if RollBack is necessary
-    	if(NeedRollBack == 1){
+		//Determine if RollBack is necessary
+		if(NeedRollBack == 1){
  800098e:	4b10      	ldr	r3, [pc, #64]	; (80009d0 <SimulateKeyStrokes+0x74>)
  8000990:	681b      	ldr	r3, [r3, #0]
  8000992:	2b01      	cmp	r3, #1
  8000994:	d10a      	bne.n	80009ac <SimulateKeyStrokes+0x50>
-    		NeedRollBack = 0;
+			NeedRollBack = 0;
  8000996:	4b0e      	ldr	r3, [pc, #56]	; (80009d0 <SimulateKeyStrokes+0x74>)
  8000998:	2200      	movs	r2, #0
  800099a:	601a      	str	r2, [r3, #0]
-    		(*cntNow)--;
+			(*cntNow)--;
  800099c:	687b      	ldr	r3, [r7, #4]
  800099e:	681b      	ldr	r3, [r3, #0]
  80009a0:	1e5a      	subs	r2, r3, #1
  80009a2:	687b      	ldr	r3, [r7, #4]
  80009a4:	601a      	str	r2, [r3, #0]
-    		SimulateKeyStroke(129);
+			SimulateKeyStroke(129);
  80009a6:	2081      	movs	r0, #129	; 0x81
  80009a8:	f7ff ffa4 	bl	80008f4 <SimulateKeyStroke>
-    for(; *cntNow < len; (*cntNow)++){
+	for(; *cntNow < len; (*cntNow)++){
  80009ac:	687b      	ldr	r3, [r7, #4]
  80009ae:	681b      	ldr	r3, [r3, #0]
  80009b0:	1c5a      	adds	r2, r3, #1
@@ -1120,8 +1120,8 @@ void SimulateKeyStrokes(char *str, int len, int *cntNow){
  80009ba:	68ba      	ldr	r2, [r7, #8]
  80009bc:	429a      	cmp	r2, r3
  80009be:	dcd4      	bgt.n	800096a <SimulateKeyStrokes+0xe>
-    	}
-    }
+		}
+	}
 }
  80009c0:	bf00      	nop
  80009c2:	bf00      	nop

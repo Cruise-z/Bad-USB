@@ -92,7 +92,7 @@
  *|        (4).map[131]: Alt's descriptor                                      |
  *|        Linux start Terminal(Ctrl + Alt + T)                                |
  *|____________________________________________________________________________|
-  uint8_t map[132]={
+  uint8_t map[133]={
   		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   		0x00, 0x00, 0x64, 0x00, 0x00, 0x64, 0x00, 0x00,
   		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -113,6 +113,7 @@
   		0x66,     //ASCII[129]:Backspace
   		0x00,     //ASCII[130]:Ctrl
   		0x02,     //ASCII[131]:Alt
+  		0x03,     //ASCII[132]:GUI
   };
  *-----------------------------------------------------------------------------
  **Following are the descriptor set in Function:
@@ -246,10 +247,12 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define MapLen 132
+#define MapLen 133
 //You can adjust StrokeSlot to ensure the the correctness and stability of the output
 #define StrokeSlot 35
 #define PlugSlot 50
+//linux ShortcutSlot 500
+#define ShortcutSlot 500
 uint8_t sent_buffer[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
 
 uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
@@ -271,7 +274,7 @@ uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
 0x27, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,\
 0x37, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,\
 0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0,\
-0x85, 0x66, 0x00, 0x02, \
+0x85, 0x66, 0x00, 0x02, 0x03, \
 }\
 
 int InterruptFlag = 0;
@@ -346,9 +349,9 @@ int main(void)
 	  if(flag == 1){
 		  HAL_Delay(10000); //random slot to switch HID
 		  SwitchToHID();
-		  HAL_Delay(10000); //test Device Manager
+		  HAL_Delay(2000); //test Device Manager linux 2000
 		  //Attack begin
-		  BadUSB_Attack(0);
+		  BadUSB_Attack(2);
 
 		  flag = 0;
 		  SwitchToMSC();
@@ -437,7 +440,6 @@ void SwitchToHID(){
 	SimulateUSB_plugin();
 	MX_TIM2_Init();
 	MX_USB_DEVICE_Init();
-	HAL_Delay(PlugSlot*10);
 }
 
 void SwitchToMSC(){
@@ -494,10 +496,13 @@ void SimulateKeyStroke(uint8_t ascii){
 
 void SimulateShortcutKey(uint8_t *array, int num){
 	Get_Multi_Descriptor(array, num);
+	while((recv_buffer[0]&0x02) != 0x02){
+		SimulateKeyStroke(128);
+	}
 	USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, sent_buffer, USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 	HAL_Delay(StrokeSlot); //Wait StrokeSlot time
 	SimulateKeyRelease();
-	HAL_Delay(StrokeSlot); //Wait StrokeSlot time
+	HAL_Delay(ShortcutSlot); //Wait to avoid conflict
 }
 
 void SimulateKeyStrokes(char *str, int len, int *cntNow){
@@ -557,15 +562,19 @@ void BadUSB_Attack(int type){//type = 0:Linux; type = 1:windows.
 	if(type == 0){
 		uint8_t StartLinuxTerminal[3] = {130, 131, 'T'};
 		char AttackStr[256];
+		strcpy(AttackStr, "ls\n\nexit\n\n");
 
 		SimulateShortcutKey(StartLinuxTerminal, 3);
-		HAL_Delay(1000);   //wait to observe
-		strcpy(AttackStr, "ls\n\nexit\n\n");
 		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
-//		HAL_Delay(6000);   //wait to observe
-//		strcpy(AttackStr, "exit\n\n");
-//		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
 	}else if(type == 1){
+		uint8_t StartWindowsTerminal[2] = {132, 'R'};
+		char AttackStr[256];
+		strcpy(AttackStr, "cmd\n");
+		SimulateShortcutKey(StartWindowsTerminal, 2);
+		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
+		HAL_Delay(5000);//can not use HAL_Delay func
+		strcpy(AttackStr, "ls -a\n\n");
+		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
 	}else{    //test
 		char AttackStr[256];
 		strcpy(AttackStr, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");

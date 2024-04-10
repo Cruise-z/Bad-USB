@@ -351,7 +351,7 @@ int main(void)
 		  SwitchToHID();
 		  HAL_Delay(2000); //test Device Manager linux 2000
 		  //Attack begin
-		  BadUSB_Attack(2);
+		  BadUSB_Attack(0);
 
 		  flag = 0;
 		  SwitchToMSC();
@@ -506,7 +506,7 @@ void SimulateShortcutKey(uint8_t *array, int num){
 }
 
 void SimulateKeyStrokes(char *str, int len, int *cntNow){
-	for(; *cntNow < len; (*cntNow)++){
+	for(*cntNow = 0; *cntNow < len; (*cntNow)++){
     	//Ensure func SimulateKeyStroke is executed in uppercase environment.
 		if((recv_buffer[0]&0x02) != 0x02){
 			SimulateKeyStroke(128);
@@ -563,18 +563,18 @@ void BadUSB_Attack(int type){//type = 0:Linux; type = 1:windows.
 		uint8_t StartLinuxTerminal[3] = {130, 131, 'T'};
 		char AttackStr[256];
 		strcpy(AttackStr, "ls\n\nexit\n\n");
-
 		SimulateShortcutKey(StartLinuxTerminal, 3);
+		HAL_Delay(1000);
 		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
 	}else if(type == 1){
 		uint8_t StartWindowsTerminal[2] = {132, 'R'};
-		char AttackStr[256];
+		char AttackStr[256], AttackStr1[256];
 		strcpy(AttackStr, "cmd\n");
+		strcpy(AttackStr1, "ls -a\n\n");
 		SimulateShortcutKey(StartWindowsTerminal, 2);
 		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
-		HAL_Delay(5000);//can not use HAL_Delay func
-		strcpy(AttackStr, "ls -a\n\n");
-		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
+		HAL_Delay(1000);
+		SimulateKeyStrokes(AttackStr1, strlen(AttackStr1), &PrintCnt);
 	}else{    //test
 		char AttackStr[256];
 		strcpy(AttackStr, "!@#$%^&*()_+1234567890~`{}|:\"<>?[];',./ashdahskdhasjdeuwhuASDJDHJAJKDHBSXAHE\n");

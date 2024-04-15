@@ -467,6 +467,8 @@ void Get_Single_Descriptor(uint8_t ascii){
 		sent_buffer[0] |= 0x02;
 }
 
+/*Designed for shortcut key combinations to obtain data packets:
+ * for simultaneously pressing multiple keys*/
 void Get_Multi_Descriptor(uint8_t *array, int num){
 	memset(sent_buffer, 0x00, sizeof(uint8_t)*USBD_CUSTOMHID_OUTREPORT_BUF_SIZE);
 	uint8_t Map[MapLen] = Map_Init;

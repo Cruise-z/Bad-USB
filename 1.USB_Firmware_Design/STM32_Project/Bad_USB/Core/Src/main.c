@@ -53,10 +53,10 @@
  *| buffer[6] - 7 ~ 0 | Enter | Esc | Backspace | Tab                          |
  *|** This is the number key 1 ~ 0 in the main keyboard area                   |
  *| buffer[7] - Space | - | = | [ | ] | \ | \ | ;                              |
- *| buffer[8] - ' | ` | , | . | / | Cap | F1 ~ F2                              |
+ *| buffer[8] - ' | ` | , | . | / | CapsLock | F1 ~ F2                         |
  *| buffer[9] - F3 ~ F10                                                       |
  *| buffer[A] - F11 ~ F12 | PRTSRC | ScrollLock | Pause | Insert | Home | PgUp |
- *| buffer[B] - Delete | End | PgDn | Right | Left | Down | Up | Lock          |
+ *| buffer[B] - Delete | End | PgDn | Right | Left | Down | Up | NumLock       |
  *| buffer[C] - / | * | - | + | Enter | 1 ~ 3                                  |
  *| buffer[D] - 4 ~ 0 | .                                                      |
  *|** This is the number key 1 ~ 0 in the numeric keypad area                  |
@@ -91,8 +91,11 @@
  *|        (3).map[130]: Ctrl's descriptor                                     |
  *|        (4).map[131]: Alt's descriptor                                      |
  *|        Linux start Terminal(Ctrl + Alt + T)                                |
+ *|        (5).map[132]: GUI's descriptor (Win)                                |
+ *|        Windows start Terminal(Win + R)                                     |
+ *|        (6).map[133]: NumLock's descriptor                                  |
  *|____________________________________________________________________________|
-  uint8_t map[133]={
+  uint8_t map[134]={
   		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   		0x00, 0x00, 0x64, 0x00, 0x00, 0x64, 0x00, 0x00,
   		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -114,6 +117,7 @@
   		0x00,     //ASCII[130]:Ctrl
   		0x02,     //ASCII[131]:Alt
   		0x03,     //ASCII[132]:GUI
+  		0xb7,     //ASCII[133]:NumLock
   };
  *-----------------------------------------------------------------------------
  **Following are the descriptor set in Function:
@@ -247,8 +251,9 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define MapLen 133
-#define Target FPGA
+#define FPGA       1
+#define Desktop    2
+#define Target     FPGA
 
 /*You can adjust following configure Slot:
  * to ensure the the correctness and stability of the output*/
@@ -257,12 +262,14 @@ void SystemClock_Config(void);
   #define PlugSlot 50
   #define ShortcutSlot 1000
   #define SwitchDeviceSlot 3000
+  #define TestHIDSlot 1000
   #define InjectStringSlot 1000
 #elif Target == Desktop
   #define StrokeSlot 35
   #define PlugSlot 50
   #define ShortcutSlot 500
   #define SwitchDeviceSlot 1000
+  #define TestHIDSlot 500
   #define InjectStringSlot 1000
 #endif
 
@@ -270,6 +277,7 @@ uint8_t sent_buffer[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
 
 uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
 
+#define MapLen 134
 #define Map_Init {\
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
 0x00, 0x00, 0x64, 0x00, 0x00, 0x64, 0x00, 0x00,\
@@ -287,7 +295,7 @@ uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
 0x27, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,\
 0x37, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,\
 0x47, 0x50, 0x51, 0x7b, 0x7d, 0x7c, 0x89, 0xb0,\
-0x85, 0x66, 0x00, 0x02, 0x03, \
+0x85, 0x66, 0x00, 0x02, 0x03, 0xb7, \
 }\
 
 #define LinuxTerminal {130, 131, 'T'}
@@ -371,7 +379,8 @@ int main(void)
 		  while(1){
 			  if(!Flash_Busy){
 				  SwitchToHID();
-				  while(!TestHID());
+				  while(!TestHID())
+					  HAL_Delay(TestHIDSlot);
 				  //Attack begin
 				  BadUSB_Attack(0);
 				  break;
@@ -605,11 +614,11 @@ void InterruptTrap(int *InterruptFlag){
 }
 
 int TestHID(){
-	SimulateKeyStroke(128);
-	uint8_t PrevState = recv_buffer[0]&0x02;
-	for(int i = 0; i < 4; i++)
-		SimulateKeyStroke(128);
-	uint8_t CurrState = recv_buffer[0]&0x02;
+	char testStr[4] = {133, 133, 133, 133};
+	SimulateKeyStroke(133);
+	uint8_t PrevState = recv_buffer[0]&0x01;
+	SimulateKeyStrokes(testStr, 4, &PrintCnt);
+	uint8_t CurrState = recv_buffer[0]&0x01;
 	return PrevState == CurrState;
 }
 
@@ -639,7 +648,7 @@ void BadUSB_Attack(int stage){
 		uint8_t Terminal[2] = WindowsTerminal;
 		char AttackStr[256], AttackStr1[256];
 		strcpy(AttackStr, "powershell\n");
-		strcpy(AttackStr1, "ls -a\n\nexit\n");
+		strcpy(AttackStr1, "ls\n\nexit\n");
 		SimulateShortcutKey(Terminal, 2);
 		SimulateKeyStrokes(AttackStr, strlen(AttackStr), &PrintCnt);
 		HAL_Delay(InjectStringSlot);

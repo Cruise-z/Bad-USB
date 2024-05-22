@@ -16,6 +16,7 @@
 #include "gpio.h"
 #include "usbd_customhid.h"
 #include "usb_device_MSC.h"
+#include "BadUSB_Conf.h"
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 extern int isMSC;

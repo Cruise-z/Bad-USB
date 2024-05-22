@@ -204,6 +204,7 @@
 #define FPGA       1
 #define Desktop    2
 #define Target     FPGA
+#define File_Host_Addr "192.168.2.207"
 
 /*You can adjust following configure Slot:
  * to ensure the the correctness and stability of the output*/
@@ -250,6 +251,5 @@ uint8_t recv_buffer[USBD_CUSTOMHID_INREPORT_BUF_SIZE];
 
 #define LinuxTerminal {130, 131, 'T'}
 #define WindowsTerminal {132, 'R'}
-
 
 #endif /* INC_BADUSB_CONF_H_ */
